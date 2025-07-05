@@ -30,12 +30,16 @@ const Attendance: React.FC = () => {
   const fetchEvents = async () => {
     try {
       const response = await api.get("/events");
-      const eventsList = response.data;
-      setEvents(eventsList);
+      // Handle both old and new response formats
+      const eventsList = response.data.events || response.data;
+
+      // Ensure eventsList is always an array
+      const eventsArray = Array.isArray(eventsList) ? eventsList : [];
+      setEvents(eventsArray);
 
       // Auto-select today's event if available
       const today = new Date().toISOString().split("T")[0];
-      const todayEvent = eventsList.find(
+      const todayEvent = eventsArray.find(
         (event: Event) =>
           new Date(event.eventDate).toISOString().split("T")[0] === today
       );
@@ -44,6 +48,7 @@ const Attendance: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching events:", error);
+      setEvents([]); // Set empty array on error
     }
   };
 
@@ -115,19 +120,22 @@ const Attendance: React.FC = () => {
             <select
               value={selectedEvent?._id || ""}
               onChange={(e) => {
-                const event = events.find((ev) => ev._id === e.target.value);
+                const event = Array.isArray(events)
+                  ? events.find((ev) => ev._id === e.target.value)
+                  : null;
                 setSelectedEvent(event || null);
                 clearMessages();
               }}
               className="input-field"
             >
               <option value="">Select an event</option>
-              {events.map((event) => (
-                <option key={event._id} value={event._id}>
-                  {event.title} -{" "}
-                  {new Date(event.eventDate).toLocaleDateString()}
-                </option>
-              ))}
+              {Array.isArray(events) &&
+                events.map((event) => (
+                  <option key={event._id} value={event._id}>
+                    {event.title} -{" "}
+                    {new Date(event.eventDate).toLocaleDateString()}
+                  </option>
+                ))}
             </select>
           </div>
 
