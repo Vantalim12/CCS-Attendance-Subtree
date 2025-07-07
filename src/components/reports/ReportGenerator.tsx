@@ -291,8 +291,11 @@ const ReportGenerator: React.FC = () => {
       const studentName =
         `${record.student.firstName} ${record.student.lastName}`.toLowerCase();
       const studentId = record.student.studentId.toLowerCase();
+      // Use eventTitle from the record if available, otherwise find by event ID
       const eventTitle =
-        events.find((e) => e._id === record.event)?.title?.toLowerCase() || "";
+        (record as any).eventTitle?.toLowerCase() ||
+        events.find((e) => e._id === record.event)?.title?.toLowerCase() ||
+        "";
 
       return (
         studentName.includes(searchTerm.toLowerCase()) ||

@@ -42,7 +42,7 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
 
   const fetchEventAttendance = async () => {
     try {
-      const response = await api.get(`/attendance/event/${event._id}`);
+      const response = await api.get(`/events/${event._id}/attendance`);
       setAttendanceRecords(response.data);
     } catch (error) {
       console.error("Failed to fetch event attendance:", error);
@@ -157,11 +157,10 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
     if (!isAdmin) return;
 
     try {
-      await api.post(`/attendance/manual`, {
+      await api.post(`/attendance/manual-sign-in`, {
         studentId,
         eventId: event._id,
         session,
-        status,
       });
       await fetchEventAttendance();
     } catch (error: any) {
@@ -171,9 +170,12 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
 
   const exportAttendance = async () => {
     try {
-      const response = await api.get(`/attendance/export/event/${event._id}`, {
-        responseType: "blob",
-      });
+      const response = await api.get(
+        `/attendance/export?eventId=${event._id}`,
+        {
+          responseType: "blob",
+        }
+      );
 
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
