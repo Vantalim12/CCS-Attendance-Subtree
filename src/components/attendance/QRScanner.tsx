@@ -5,15 +5,24 @@ interface QRScannerProps {
   onScanSuccess: (qrCodeData: string) => void;
   onScanError?: (error: string) => void;
   isActive: boolean;
+  autoRestart?: boolean; // New prop to enable auto-restart
+  restartDelay?: number; // Delay in milliseconds before allowing next scan (default: 3000ms)
 }
 
 const QRScanner: React.FC<QRScannerProps> = ({
   onScanSuccess,
   onScanError,
   isActive,
+  autoRestart = true, // Default to true for continuous scanning
+  restartDelay = 3000, // Default 3 second delay before next scan is allowed
 }) => {
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [scanMessage, setScanMessage] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const lastScanRef = useRef<string>("");
+  const lastScanTimeRef = useRef<number>(0);
+  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isActive && !isScanning) {
@@ -26,6 +35,9 @@ const QRScanner: React.FC<QRScannerProps> = ({
       if (scannerRef.current) {
         stopScanner();
       }
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
     };
   }, [isActive]);
 
@@ -33,6 +45,9 @@ const QRScanner: React.FC<QRScannerProps> = ({
     if (scannerRef.current) {
       stopScanner();
     }
+
+    setScanMessage("");
+    setIsProcessing(false);
 
     const scanner = new Html5QrcodeScanner(
       "qr-reader",
@@ -46,8 +61,38 @@ const QRScanner: React.FC<QRScannerProps> = ({
 
     scanner.render(
       (decodedText) => {
+        const now = Date.now();
+
+        // Prevent scanning the same code or scanning too quickly
+        if (
+          isProcessing ||
+          (lastScanRef.current === decodedText &&
+            now - lastScanTimeRef.current < restartDelay)
+        ) {
+          return;
+        }
+
+        // Update last scan info
+        lastScanRef.current = decodedText;
+        lastScanTimeRef.current = now;
+        setIsProcessing(true);
+
+        // Show success message
+        setScanMessage("QR Code scanned successfully! Ready for next scan...");
+
+        // Call the success handler
         onScanSuccess(decodedText);
-        stopScanner();
+
+        if (autoRestart) {
+          // Clear processing state after delay to allow next scan
+          processingTimeoutRef.current = setTimeout(() => {
+            setIsProcessing(false);
+            setScanMessage("");
+          }, restartDelay);
+        } else {
+          // If auto-restart is disabled, stop the scanner
+          stopScanner();
+        }
       },
       (error) => {
         // Only log actual errors, not "No QR code found"
@@ -72,6 +117,29 @@ const QRScanner: React.FC<QRScannerProps> = ({
       scannerRef.current = null;
     }
     setIsScanning(false);
+    setIsProcessing(false);
+    setScanMessage("");
+
+    // Clear any pending timeout
+    if (processingTimeoutRef.current) {
+      clearTimeout(processingTimeoutRef.current);
+      processingTimeoutRef.current = null;
+    }
+  };
+
+  const manualRestart = () => {
+    if (processingTimeoutRef.current) {
+      clearTimeout(processingTimeoutRef.current);
+      processingTimeoutRef.current = null;
+    }
+    setIsProcessing(false);
+    setScanMessage("");
+    lastScanRef.current = "";
+    lastScanTimeRef.current = 0;
+
+    if (!isScanning) {
+      startScanner();
+    }
   };
 
   return (
@@ -83,11 +151,40 @@ const QRScanner: React.FC<QRScannerProps> = ({
             className="mx-auto max-w-sm"
             style={{ width: "100%" }}
           />
-          <div className="text-center">
+
+          {scanMessage && (
+            <div className="text-center p-3 bg-green-100 border border-green-300 rounded-md">
+              <p className="text-green-700 text-sm">{scanMessage}</p>
+            </div>
+          )}
+
+          {isProcessing && autoRestart && (
+            <div className="text-center p-3 bg-blue-100 border border-blue-300 rounded-md">
+              <p className="text-blue-700 text-sm">
+                Processing... Next scan will be available in{" "}
+                {Math.ceil(restartDelay / 1000)} seconds
+              </p>
+            </div>
+          )}
+
+          <div className="text-center space-x-2">
             <button onClick={stopScanner} className="btn-secondary">
               Stop Scanner
             </button>
+            {(!isScanning || isProcessing) && (
+              <button onClick={manualRestart} className="btn-primary">
+                {isScanning ? "Scan Again" : "Restart Scanner"}
+              </button>
+            )}
           </div>
+
+          {autoRestart && isScanning && (
+            <div className="text-center">
+              <p className="text-xs text-gray-500">
+                📷 Camera is running continuously - point at QR codes to scan
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="text-center py-8">

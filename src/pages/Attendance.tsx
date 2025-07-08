@@ -67,11 +67,11 @@ const Attendance: React.FC = () => {
       });
 
       setSuccess(`Attendance marked successfully for ${session} session!`);
-      setIsQRActive(false);
+      // Keep scanner active for continuous scanning
       triggerRefresh();
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to mark attendance");
-      setIsQRActive(false);
+      // Keep scanner active even on error for retry
     }
   };
 
