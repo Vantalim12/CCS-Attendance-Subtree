@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 
 interface QRScannerProps {
   onScanSuccess: (qrCodeData: string) => void;
@@ -16,13 +16,17 @@ const QRScanner: React.FC<QRScannerProps> = ({
   autoRestart = true, // Default to true for continuous scanning
   restartDelay = 3000, // Default 3 second delay before next scan is allowed
 }) => {
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanMessage, setScanMessage] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const lastScanRef = useRef<string>("");
   const lastScanTimeRef = useRef<number>(0);
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [cameraId, setCameraId] = useState<string>("");
+  const [cameras, setCameras] = useState<Array<{ id: string; label: string }>>(
+    []
+  );
 
   useEffect(() => {
     if (isActive && !isScanning) {
@@ -41,70 +45,91 @@ const QRScanner: React.FC<QRScannerProps> = ({
     };
   }, [isActive]);
 
-  const startScanner = () => {
+  useEffect(() => {
+    Html5Qrcode.getCameras()
+      .then((devices) => {
+        setCameras(
+          devices.map((device) => ({
+            id: device.id,
+            label: device.label || `Camera ${device.id}`,
+          }))
+        );
+        if (devices.length > 0) {
+          setCameraId(devices[0].id);
+        }
+      })
+      .catch((err) => {
+        console.error("Error getting cameras", err);
+        onScanError?.(err.toString());
+      });
+  }, []);
+
+  const startScanner = async () => {
     if (scannerRef.current) {
-      stopScanner();
+      await stopScanner();
+    }
+
+    if (!cameraId) {
+      onScanError?.("No camera selected");
+      return;
     }
 
     setScanMessage("");
     setIsProcessing(false);
 
-    const scanner = new Html5QrcodeScanner(
-      "qr-reader",
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
-      },
-      false
-    );
+    try {
+      const scanner = new Html5Qrcode("qr-reader");
+      scannerRef.current = scanner;
 
-    scanner.render(
-      (decodedText) => {
-        const now = Date.now();
+      await scanner.start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+        },
+        (decodedText: string) => {
+          const now = Date.now();
 
-        // Prevent scanning the same code or scanning too quickly
-        if (
-          isProcessing ||
-          (lastScanRef.current === decodedText &&
-            now - lastScanTimeRef.current < restartDelay)
-        ) {
-          return;
+          if (
+            isProcessing ||
+            (lastScanRef.current === decodedText &&
+              now - lastScanTimeRef.current < restartDelay)
+          ) {
+            return;
+          }
+
+          lastScanRef.current = decodedText;
+          lastScanTimeRef.current = now;
+          setIsProcessing(true);
+          setScanMessage(
+            "QR Code scanned successfully! Ready for next scan..."
+          );
+          onScanSuccess(decodedText);
+
+          if (autoRestart) {
+            processingTimeoutRef.current = setTimeout(() => {
+              setIsProcessing(false);
+              setScanMessage("");
+            }, restartDelay);
+          } else {
+            stopScanner();
+          }
+        },
+        (errorMessage: string) => {
+          if (errorMessage.includes("NotFoundException")) {
+            return;
+          }
+          console.error("QR Scanner error:", errorMessage);
+          onScanError?.(errorMessage);
         }
+      );
 
-        // Update last scan info
-        lastScanRef.current = decodedText;
-        lastScanTimeRef.current = now;
-        setIsProcessing(true);
-
-        // Show success message
-        setScanMessage("QR Code scanned successfully! Ready for next scan...");
-
-        // Call the success handler
-        onScanSuccess(decodedText);
-
-        if (autoRestart) {
-          // Clear processing state after delay to allow next scan
-          processingTimeoutRef.current = setTimeout(() => {
-            setIsProcessing(false);
-            setScanMessage("");
-          }, restartDelay);
-        } else {
-          // If auto-restart is disabled, stop the scanner
-          stopScanner();
-        }
-      },
-      (error) => {
-        // Only log actual errors, not "No QR code found"
-        if (error.includes("NotFoundException")) {
-          return;
-        }
-        onScanError?.(error);
-      }
-    );
-
-    scannerRef.current = scanner;
-    setIsScanning(true);
+      setIsScanning(true);
+    } catch (error) {
+      console.error("Error starting scanner:", error);
+      onScanError?.(error instanceof Error ? error.message : String(error));
+    }
   };
 
   const stopScanner = () => {
@@ -146,6 +171,21 @@ const QRScanner: React.FC<QRScannerProps> = ({
     <div className="qr-scanner">
       {isActive ? (
         <div className="space-y-4">
+          {cameras.length > 0 && (
+            <div className="mb-4">
+              <select
+                className="form-select block w-full mt-1"
+                value={cameraId}
+                onChange={(e) => setCameraId(e.target.value)}
+              >
+                {cameras.map((camera) => (
+                  <option key={camera.id} value={camera.id}>
+                    {camera.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div
             id="qr-reader"
             className="mx-auto max-w-sm"
