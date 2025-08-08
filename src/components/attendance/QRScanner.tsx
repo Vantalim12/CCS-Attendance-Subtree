@@ -85,8 +85,14 @@ const QRScanner: React.FC<QRScannerProps> = ({
         cameraId,
         {
           fps: 10,
-          qrbox: { width: 400, height: 400 },
+          qrbox: { width: 300, height: 300 },
           aspectRatio: 1.0,
+          disableFlip: false, // Allow scanning flipped QR codes
+          videoConstraints: {
+            facingMode: "environment", // Use back camera on mobile
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
         },
         (decodedText: string) => {
           const now = Date.now();
@@ -117,11 +123,28 @@ const QRScanner: React.FC<QRScannerProps> = ({
           }
         },
         (errorMessage: string) => {
-          if (errorMessage.includes("NotFoundException")) {
+          // Ignore common "no QR code found" errors - these are normal
+          if (
+            errorMessage.includes("NotFoundException") ||
+            errorMessage.includes("No MultiFormat Readers") ||
+            errorMessage.includes("No barcode detected")
+          ) {
             return;
           }
-          console.error("QR Scanner error:", errorMessage);
-          onScanError?.(errorMessage);
+
+          // Only log and report actual scanning errors
+          console.warn("QR Scanner warning:", errorMessage);
+
+          // Don't report every scanning attempt as an error
+          // Only report if it's a real configuration or permission issue
+          if (
+            errorMessage.includes("permission") ||
+            errorMessage.includes("NotAllowedError") ||
+            errorMessage.includes("camera") ||
+            errorMessage.includes("device")
+          ) {
+            onScanError?.(errorMessage);
+          }
         }
       );
 

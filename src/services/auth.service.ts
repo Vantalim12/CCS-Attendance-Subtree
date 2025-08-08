@@ -5,7 +5,7 @@ import { LoginCredentials, RegisterData, AuthResponse, User } from "../types";
 const getApiBaseUrl = () => {
   const baseUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
   // Remove /api if it exists, then add it
-  const cleanUrl = baseUrl.replace(/\/api$/, '');
+  const cleanUrl = baseUrl.replace(/\/api$/, "");
   return `${cleanUrl}/api`;
 };
 

@@ -5,9 +5,13 @@ import { useAuth } from "../hooks/useAuth";
 import QRScanner from "../components/attendance/QRScanner";
 import AttendanceTable from "../components/attendance/AttendanceTable";
 import ManualAttendance from "../components/attendance/ManualAttendance";
+import ManualIdInput from "../components/attendance/ManualIdInput";
 import ExcuseLetterForm from "../components/excuses/ExcuseLetterForm";
 import ExcuseLetterList from "../components/excuses/ExcuseLetterList";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import NotificationToast, {
+  NotificationData,
+} from "../components/common/NotificationToast";
 
 const Attendance: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
@@ -20,6 +24,9 @@ const Attendance: React.FC = () => {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [notification, setNotification] = useState<NotificationData | null>(
+    null
+  );
   const { hasRole, user } = useAuth();
   const isAdmin = hasRole("admin");
 
@@ -60,13 +67,27 @@ const Attendance: React.FC = () => {
 
     try {
       setError("");
-      await api.post("/attendance", {
+      const response = await api.post("/attendance", {
         qrCodeData,
         eventId: selectedEvent._id,
         session,
       });
 
-      setSuccess(`Attendance marked successfully for ${session} session!`);
+      // Show success notification with student information
+      const studentInfo = response.data.student;
+      if (studentInfo) {
+        setNotification({
+          type: "success",
+          title: "Attendance Marked Successfully!",
+          message: `${studentInfo.studentName} (ID: ${
+            studentInfo.studentId
+          }) - ${session.charAt(0).toUpperCase() + session.slice(1)} Session`,
+          duration: 4000,
+        });
+      } else {
+        setSuccess(`Attendance marked successfully for ${session} session!`);
+      }
+
       // Keep scanner active for continuous scanning
       triggerRefresh();
     } catch (error: any) {
@@ -83,9 +104,28 @@ const Attendance: React.FC = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
 
+  const handleManualAttendanceMarked = (studentData: {
+    studentId: string;
+    studentName: string;
+  }) => {
+    setNotification({
+      type: "success",
+      title: "Attendance Marked Successfully!",
+      message: `${studentData.studentName} (ID: ${studentData.studentId}) - ${
+        session.charAt(0).toUpperCase() + session.slice(1)
+      } Session`,
+      duration: 4000,
+    });
+    triggerRefresh();
+  };
+
   const clearMessages = () => {
     setError("");
     setSuccess("");
+  };
+
+  const clearNotification = () => {
+    setNotification(null);
   };
 
   const tabs = [
@@ -256,6 +296,14 @@ const Attendance: React.FC = () => {
                       onScanSuccess={handleQRScanSuccess}
                       onScanError={handleQRScanError}
                     />
+
+                    {/* Manual ID Input Component */}
+                    <ManualIdInput
+                      selectedEvent={selectedEvent}
+                      session={session}
+                      onAttendanceMarked={handleManualAttendanceMarked}
+                      onError={setError}
+                    />
                   </div>
                 )}
               </div>
@@ -324,6 +372,12 @@ const Attendance: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Notification Toast */}
+      <NotificationToast
+        notification={notification}
+        onClose={clearNotification}
+      />
     </div>
   );
 };
