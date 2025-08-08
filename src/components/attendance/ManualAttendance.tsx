@@ -19,10 +19,28 @@ const ManualAttendance: React.FC<ManualAttendanceProps> = ({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     fetchStudents();
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".student-search-container")) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showDropdown]);
 
   const fetchStudents = async () => {
     try {
@@ -35,8 +53,12 @@ const ManualAttendance: React.FC<ManualAttendanceProps> = ({
 
   const handleManualAttendance = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedStudent || !selectedEvent) {
-      setError("Please select a student and event");
+    if (!selectedStudent) {
+      setError("Please select a student from the search results");
+      return;
+    }
+    if (!selectedEvent) {
+      setError("Please select an event");
       return;
     }
 
@@ -58,6 +80,7 @@ const ManualAttendance: React.FC<ManualAttendanceProps> = ({
 
       setSuccess(`Successfully marked ${action} for ${session} session`);
       setSelectedStudent("");
+      setSearchTerm("");
       onAttendanceMarked?.();
     } catch (error: any) {
       setError(error.response?.data?.message || `Failed to mark ${action}`);
@@ -69,6 +92,36 @@ const ManualAttendance: React.FC<ManualAttendanceProps> = ({
   const clearMessages = () => {
     setError("");
     setSuccess("");
+  };
+
+  // Filter students based on search term
+  const filteredStudents = students.filter((student) => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      student.firstName.toLowerCase().includes(searchLower) ||
+      student.lastName.toLowerCase().includes(searchLower) ||
+      student.studentId.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Get selected student details
+  const selectedStudentData = students.find((s) => s._id === selectedStudent);
+
+  const handleStudentSelect = (student: Student) => {
+    setSelectedStudent(student._id);
+    setSearchTerm(
+      `${student.firstName} ${student.lastName} (${student.studentId})`
+    );
+    setShowDropdown(false);
+    clearMessages();
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setSelectedStudent("");
+    setShowDropdown(true);
+    clearMessages();
   };
 
   return (
@@ -86,25 +139,70 @@ const ManualAttendance: React.FC<ManualAttendanceProps> = ({
       )}
 
       <form onSubmit={handleManualAttendance} className="space-y-4">
-        {/* Student Selection */}
-        <div>
-          <label className="label">Student</label>
-          <select
-            value={selectedStudent}
-            onChange={(e) => {
-              setSelectedStudent(e.target.value);
-              clearMessages();
-            }}
-            className="input-field"
-            required
-          >
-            <option value="">Select a student</option>
-            {students.map((student) => (
-              <option key={student._id} value={student._id}>
-                {student.firstName} {student.lastName} ({student.studentId})
-              </option>
-            ))}
-          </select>
+        {/* Student Selection with Search */}
+        <div className="relative student-search-container">
+          <label className="label">Student *</label>
+          <div className="relative">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onFocus={() => setShowDropdown(true)}
+              placeholder="Search by name or student ID..."
+              className="input-field w-full"
+              autoComplete="off"
+              required={!selectedStudent}
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              🔍
+            </div>
+          </div>
+
+          {/* Dropdown with filtered results */}
+          {showDropdown && searchTerm && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              {filteredStudents.length > 0 ? (
+                filteredStudents.slice(0, 10).map((student) => (
+                  <div
+                    key={student._id}
+                    onClick={() => handleStudentSelect(student)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="font-medium text-gray-900">
+                      {student.firstName} {student.lastName}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      ID: {student.studentId} • {student.yearLevel} •{" "}
+                      {student.major}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-2 text-gray-500 text-sm">
+                  No students found matching "{searchTerm}"
+                </div>
+              )}
+              {filteredStudents.length > 10 && (
+                <div className="px-4 py-2 text-gray-500 text-sm border-t">
+                  Showing first 10 results. Continue typing to narrow down...
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Show selected student info */}
+          {selectedStudentData && (
+            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="text-sm font-medium text-blue-900">
+                Selected: {selectedStudentData.firstName}{" "}
+                {selectedStudentData.lastName}
+              </div>
+              <div className="text-xs text-blue-700">
+                ID: {selectedStudentData.studentId} •{" "}
+                {selectedStudentData.yearLevel} • {selectedStudentData.major}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Session Selection */}

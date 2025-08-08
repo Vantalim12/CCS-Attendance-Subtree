@@ -85,7 +85,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
         cameraId,
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 },
+          qrbox: { width: 400, height: 400 },
           aspectRatio: 1.0,
         },
         (decodedText: string) => {
@@ -188,7 +188,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
           )}
           <div
             id="qr-reader"
-            className="mx-auto max-w-sm"
+            className="mx-auto max-w-lg"
             style={{ width: "100%" }}
           />
 

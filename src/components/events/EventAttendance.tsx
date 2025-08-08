@@ -40,9 +40,50 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
     calculateStats();
   }, [attendanceRecords, students]);
 
+  // Refresh attendance data periodically during the event
+  useEffect(() => {
+    const isEventActive = () => {
+      const now = new Date();
+      const eventDate = new Date(event.eventDate);
+      const [startHour, startMinute] = event.startTime.split(":").map(Number);
+      const [endHour, endMinute] = event.endTime.split(":").map(Number);
+
+      const eventStart = new Date(eventDate);
+      eventStart.setHours(startHour, startMinute, 0, 0);
+
+      const eventEnd = new Date(eventDate);
+      eventEnd.setHours(endHour, endMinute, 0, 0);
+
+      // Check if event is active (within 1 hour before start to 2 hours after end)
+      const beforeEventWindow = new Date(eventStart.getTime() - 60 * 60 * 1000);
+      const afterEventWindow = new Date(
+        eventEnd.getTime() + 2 * 60 * 60 * 1000
+      );
+
+      return now >= beforeEventWindow && now <= afterEventWindow;
+    };
+
+    let refreshInterval: NodeJS.Timeout | null = null;
+
+    if (isEventActive()) {
+      // Refresh every 30 seconds during active events
+      refreshInterval = setInterval(() => {
+        console.log("Auto-refreshing attendance data for active event");
+        fetchEventAttendance();
+      }, 30000);
+    }
+
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  }, [event._id, event.eventDate, event.startTime, event.endTime]);
+
   const fetchEventAttendance = async () => {
     try {
       const response = await api.get(`/events/${event._id}/attendance`);
+      console.log("Fetched attendance records:", response.data); // Debug log
       setAttendanceRecords(response.data);
     } catch (error) {
       console.error("Failed to fetch event attendance:", error);
@@ -62,7 +103,8 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
   };
 
   const calculateStats = () => {
-    const totalStudents = students.length;
+    // Only count students who have attendance records for this event
+    const totalStudents = attendanceRecords.length;
     let presentMorning = 0,
       presentAfternoon = 0;
     let absentMorning = 0,
@@ -70,24 +112,16 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
     let excusedMorning = 0,
       excusedAfternoon = 0;
 
-    students.forEach((student) => {
-      const attendance = attendanceRecords.find(
-        (a) => a.student._id === student._id
-      );
+    attendanceRecords.forEach((attendance) => {
+      // Count morning session stats
+      if (attendance.morningStatus === "present") presentMorning++;
+      else if (attendance.morningStatus === "absent") absentMorning++;
+      else if (attendance.morningStatus === "excused") excusedMorning++;
 
-      if (attendance) {
-        if (attendance.morningStatus === "present") presentMorning++;
-        else if (attendance.morningStatus === "absent") absentMorning++;
-        else if (attendance.morningStatus === "excused") excusedMorning++;
-
-        if (attendance.afternoonStatus === "present") presentAfternoon++;
-        else if (attendance.afternoonStatus === "absent") absentAfternoon++;
-        else if (attendance.afternoonStatus === "excused") excusedAfternoon++;
-      } else {
-        // No attendance record means absent
-        absentMorning++;
-        absentAfternoon++;
-      }
+      // Count afternoon session stats
+      if (attendance.afternoonStatus === "present") presentAfternoon++;
+      else if (attendance.afternoonStatus === "absent") absentAfternoon++;
+      else if (attendance.afternoonStatus === "excused") excusedAfternoon++;
     });
 
     setStats({
@@ -106,8 +140,9 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
   };
 
   const getFilteredStudents = () => {
-    return students.filter((student) => {
-      const attendance = getStudentAttendance(student._id);
+    // Only show students who have attendance records
+    return attendanceRecords.filter((attendance) => {
+      const student = attendance.student;
 
       // Search filter
       if (searchTerm) {
@@ -123,8 +158,8 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
 
       // Status and session filters
       if (statusFilter !== "all" || sessionFilter !== "all") {
-        const morningStatus = attendance?.morningStatus || "absent";
-        const afternoonStatus = attendance?.afternoonStatus || "absent";
+        const morningStatus = attendance.morningStatus;
+        const afternoonStatus = attendance.afternoonStatus;
 
         if (statusFilter !== "all") {
           if (sessionFilter === "morning" && morningStatus !== statusFilter)
@@ -162,7 +197,12 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
         eventId: event._id,
         session,
       });
+      // Refresh attendance data and recalculate stats
       await fetchEventAttendance();
+      // Small delay to ensure backend has processed the update
+      setTimeout(() => {
+        fetchEventAttendance();
+      }, 500);
     } catch (error: any) {
       alert(error.response?.data?.message || "Failed to mark attendance");
     }
@@ -225,7 +265,7 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
     );
   }
 
-  const filteredStudents = getFilteredStudents();
+  const filteredAttendance = getFilteredStudents();
 
   return (
     <div className="space-y-6">
@@ -248,12 +288,24 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
             )}
           </div>
           {isAdmin && (
-            <button
-              onClick={exportAttendance}
-              className="btn-primary flex items-center gap-2"
-            >
-              📊 Export
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  console.log("Manual refresh triggered");
+                  fetchEventAttendance();
+                }}
+                className="btn-secondary flex items-center gap-2"
+                title="Refresh attendance data"
+              >
+                🔄 Refresh
+              </button>
+              <button
+                onClick={exportAttendance}
+                className="btn-primary flex items-center gap-2"
+              >
+                📊 Export
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -390,7 +442,7 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">
-            Attendance Records ({filteredStudents.length} of{" "}
+            Attendance Records ({filteredAttendance.length} of{" "}
             {stats.totalStudents} students)
           </h3>
         </div>
@@ -419,13 +471,13 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredStudents.map((student) => {
-                const attendance = getStudentAttendance(student._id);
-                const morningStatus = attendance?.morningStatus || "absent";
-                const afternoonStatus = attendance?.afternoonStatus || "absent";
+              {filteredAttendance.map((attendance) => {
+                const student = attendance.student;
+                const morningStatus = attendance.morningStatus;
+                const afternoonStatus = attendance.afternoonStatus;
 
                 return (
-                  <tr key={student._id} className="hover:bg-gray-50">
+                  <tr key={attendance._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
@@ -450,7 +502,7 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="space-y-1">
-                        {attendance?.morningCheckIn && (
+                        {attendance.morningCheckIn && (
                           <div>
                             🌅{" "}
                             {new Date(
@@ -458,7 +510,7 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
                             ).toLocaleTimeString()}
                           </div>
                         )}
-                        {attendance?.afternoonCheckIn && (
+                        {attendance.afternoonCheckIn && (
                           <div>
                             🌇{" "}
                             {new Date(
@@ -466,6 +518,12 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
                             ).toLocaleTimeString()}
                           </div>
                         )}
+                        {!attendance.morningCheckIn &&
+                          !attendance.afternoonCheckIn && (
+                            <div className="text-gray-400">
+                              No check-ins yet
+                            </div>
+                          )}
                       </div>
                     </td>
                     {isAdmin && (
@@ -516,9 +574,11 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
           </table>
         </div>
 
-        {filteredStudents.length === 0 && (
+        {filteredAttendance.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No students found matching your criteria
+            {attendanceRecords.length === 0
+              ? "No attendance records yet. Students will appear here after scanning QR codes or manual marking."
+              : "No students found matching your criteria"}
           </div>
         )}
       </div>
