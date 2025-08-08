@@ -49,10 +49,9 @@ class AuthService {
       console.log("Attempting login with:", {
         email: credentials.email,
         apiUrl: API_BASE_URL,
-      });
-      // Corrected line: Add the missing "/api" prefix here
+      }); // Debug log // Fix: Correctly prepend the /api prefix to the endpoint
       const response = await api.post("/api/auth/login", credentials);
-      const authData = response.data;
+      const authData = response.data; // Store token and user data
 
       localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
@@ -62,16 +61,16 @@ class AuthService {
       console.error(
         "Login error details:",
         error.response?.data || error.message
-      );
+      ); // Debug log
       throw new Error(error.response?.data?.message || "Login failed");
     }
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      // Corrected line: Add the missing "/api" prefix here
+      // Fix: Correctly prepend the /api prefix to the endpoint
       const response = await api.post("/api/auth/register", userData);
-      const authData = response.data;
+      const authData = response.data; // Store token and user data
 
       localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
@@ -82,15 +81,40 @@ class AuthService {
     }
   }
 
-  // You should also update the token refresh method
+  logout(): void {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  }
+
+  getCurrentUser(): User | null {
+    try {
+      const userStr = localStorage.getItem("user");
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem("token");
+  }
+
+  isAuthenticated(): boolean {
+    const token = this.getToken();
+    const user = this.getCurrentUser();
+    return !!(token && user);
+  }
+
   async refreshToken(): Promise<void> {
     try {
-      // Corrected line: Add the missing "/api" prefix here
+      // Fix: Correctly prepend the /api prefix to the endpoint
       await api.get("/api/auth/me");
     } catch (error) {
       this.logout();
     }
   }
+}
 
 export const authService = new AuthService();
 export { api };
