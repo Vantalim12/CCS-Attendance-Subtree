@@ -49,9 +49,11 @@ class AuthService {
       console.log("Attempting login with:", {
         email: credentials.email,
         apiUrl: API_BASE_URL,
-      }); // Debug log // Fix: Correctly prepend the /api prefix to the endpoint
-      const response = await api.post("/api/auth/login", credentials);
-      const authData = response.data; // Store token and user data
+      }); // Debug log
+      const response = await api.post("/auth/login", credentials);
+      const authData = response.data;
+
+      // Store token and user data
 
       localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
@@ -67,12 +69,12 @@ class AuthService {
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
-    try {
-      // Fix: Correctly prepend the /api prefix to the endpoint
-      const response = await api.post("/api/auth/register", userData);
-      const authData = response.data; // Store token and user data
+          try {
+        const response = await api.post("/auth/register", userData);
+        const authData = response.data;
 
-      localStorage.setItem("token", authData.token);
+        // Store token and user data
+        localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
 
       return authData;
@@ -106,14 +108,20 @@ class AuthService {
     return !!(token && user);
   }
 
-  async refreshToken(): Promise<void> {
-    try {
-      // Fix: Correctly prepend the /api prefix to the endpoint
-      await api.get("/api/auth/me");
-    } catch (error) {
-      this.logout();
+      async refreshToken(): Promise<void> {
+      try {
+        // If your backend supports token refresh, implement it here
+        // For now, we'll just check if the current token is still valid
+        await api.get("/auth/me");
+      } catch (error) {
+        this.logout();
+      }
     }
-  }
+
+    hasRole(role: "admin" | "student"): boolean {
+      const user = this.getCurrentUser();
+      return user?.role === role;
+    }
 }
 
 export const authService = new AuthService();
