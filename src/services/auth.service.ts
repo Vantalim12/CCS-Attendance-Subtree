@@ -49,11 +49,11 @@ class AuthService {
       console.log("Attempting login with:", {
         email: credentials.email,
         apiUrl: API_BASE_URL,
-      }); // Debug log
-      const response = await api.post("/auth/login", credentials);
+      });
+      // Corrected line: Add the missing "/api" prefix here
+      const response = await api.post("/api/auth/login", credentials);
       const authData = response.data;
 
-      // Store token and user data
       localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
 
@@ -62,17 +62,17 @@ class AuthService {
       console.error(
         "Login error details:",
         error.response?.data || error.message
-      ); // Debug log
+      );
       throw new Error(error.response?.data?.message || "Login failed");
     }
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      const response = await api.post("/auth/register", userData);
+      // Corrected line: Add the missing "/api" prefix here
+      const response = await api.post("/api/auth/register", userData);
       const authData = response.data;
 
-      // Store token and user data
       localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
 
@@ -82,46 +82,15 @@ class AuthService {
     }
   }
 
-  logout(): void {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/login";
-  }
-
-  getCurrentUser(): User | null {
-    try {
-      const userStr = localStorage.getItem("user");
-      return userStr ? JSON.parse(userStr) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem("token");
-  }
-
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    const user = this.getCurrentUser();
-    return !!(token && user);
-  }
-
-  hasRole(role: "admin" | "student"): boolean {
-    const user = this.getCurrentUser();
-    return user?.role === role;
-  }
-
+  // You should also update the token refresh method
   async refreshToken(): Promise<void> {
     try {
-      // If your backend supports token refresh, implement it here
-      // For now, we'll just check if the current token is still valid
-      await api.get("/auth/me");
+      // Corrected line: Add the missing "/api" prefix here
+      await api.get("/api/auth/me");
     } catch (error) {
       this.logout();
     }
   }
-}
 
 export const authService = new AuthService();
 export { api };
