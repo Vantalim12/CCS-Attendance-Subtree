@@ -1,8 +1,15 @@
 import axios from "axios";
 import { LoginCredentials, RegisterData, AuthResponse, User } from "../types";
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+// Get base URL without /api suffix, then add /api
+const getApiBaseUrl = () => {
+  const baseUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  // Remove /api if it exists, then add it
+  const cleanUrl = baseUrl.replace(/\/api$/, '');
+  return `${cleanUrl}/api`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 console.log("API Base URL:", API_BASE_URL); // Debug log
 
@@ -69,12 +76,12 @@ class AuthService {
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
-          try {
-        const response = await api.post("/auth/register", userData);
-        const authData = response.data;
+    try {
+      const response = await api.post("/auth/register", userData);
+      const authData = response.data;
 
-        // Store token and user data
-        localStorage.setItem("token", authData.token);
+      // Store token and user data
+      localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
 
       return authData;
@@ -108,20 +115,20 @@ class AuthService {
     return !!(token && user);
   }
 
-      async refreshToken(): Promise<void> {
-      try {
-        // If your backend supports token refresh, implement it here
-        // For now, we'll just check if the current token is still valid
-        await api.get("/auth/me");
-      } catch (error) {
-        this.logout();
-      }
+  async refreshToken(): Promise<void> {
+    try {
+      // If your backend supports token refresh, implement it here
+      // For now, we'll just check if the current token is still valid
+      await api.get("/auth/me");
+    } catch (error) {
+      this.logout();
     }
+  }
 
-    hasRole(role: "admin" | "student"): boolean {
-      const user = this.getCurrentUser();
-      return user?.role === role;
-    }
+  hasRole(role: "admin" | "student"): boolean {
+    const user = this.getCurrentUser();
+    return user?.role === role;
+  }
 }
 
 export const authService = new AuthService();
