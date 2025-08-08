@@ -60,7 +60,7 @@ const Register: React.FC = () => {
             Create Account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Join the QR Attendance System
+            Join the CCS Attendance System
           </p>
         </div>
 
