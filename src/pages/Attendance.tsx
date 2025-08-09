@@ -408,6 +408,12 @@ const Attendance: React.FC = () => {
                       session={session}
                       onAttendanceMarked={handleManualAttendanceMarked}
                       onError={setError}
+                      onAlreadySignedIn={(data) =>
+                        setAlreadySignedInModal({
+                          isOpen: true,
+                          ...data,
+                        })
+                      }
                     />
                   </div>
                 )}

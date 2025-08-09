@@ -11,6 +11,12 @@ interface ManualIdInputProps {
     studentName: string;
   }) => void;
   onError: (error: string) => void;
+  onAlreadySignedIn?: (data: {
+    studentName: string;
+    studentId: string;
+    signInTime: string;
+    session: "morning" | "afternoon";
+  }) => void;
 }
 
 const ManualIdInput: React.FC<ManualIdInputProps> = ({
@@ -18,6 +24,7 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
   session,
   onAttendanceMarked,
   onError,
+  onAlreadySignedIn,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Student[]>([]);
@@ -45,13 +52,17 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
 
     setIsSearching(true);
     try {
-      console.log("Searching for students with query:", query); // Debug log
+      console.log("Searching for students with query:", query);
+      console.log("Encoded query:", encodeURIComponent(query));
+
       const response = await api.get(
         `/students?search=${encodeURIComponent(query)}`
       );
-      console.log("Search response:", response.data); // Debug log
-      console.log("Response status:", response.status); // Debug log
-      console.log("Response headers:", response.headers); // Debug log
+
+      console.log("Search response status:", response.status);
+      console.log("Search response data:", response.data);
+      console.log("Response data type:", typeof response.data);
+      console.log("Is response data an array?", Array.isArray(response.data));
 
       // Handle different response formats
       let students = [];
@@ -66,41 +77,65 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
         students = [];
       }
 
-      console.log("Processed students:", students); // Debug log
-      console.log("Number of students found:", students.length); // Debug log
+      console.log("Processed students array:", students);
+      console.log("Number of students found:", students.length);
+
+      if (students.length === 0) {
+        console.log("No students found for query:", query);
+        // Try a broader search by fetching all students to see if any exist
+        try {
+          const allStudentsResponse = await api.get("/students");
+          console.log("All students response:", allStudentsResponse.data);
+          const allStudents = Array.isArray(allStudentsResponse.data)
+            ? allStudentsResponse.data
+            : [];
+
+          if (allStudents.length === 0) {
+            onError(
+              "No students found in the database. Please add students first."
+            );
+          } else {
+            console.log(
+              `Found ${allStudents.length} total students in database, but none match "${query}"`
+            );
+            // Show first few student IDs for debugging
+            const sampleIds = allStudents
+              .slice(0, 3)
+              .map((s) => s.studentId || s._id)
+              .join(", ");
+            onError(
+              `No students found matching "${query}". Database has ${allStudents.length} students. Sample IDs: ${sampleIds}`
+            );
+          }
+        } catch (allStudentsError) {
+          console.error("Error fetching all students:", allStudentsError);
+        }
+      }
 
       // Limit to top 5 results for better UX
       setSearchResults(students.slice(0, 5));
     } catch (error: any) {
       console.error("Error searching students:", error);
-      console.error("Error details:", error.response?.data); // More detailed error log
+      console.error("Error response:", error.response);
+      console.error("Error response data:", error.response?.data);
+      console.error("Error response status:", error.response?.status);
+      console.error("Error message:", error.message);
 
-      // Try to fetch all students as a fallback to test if the API works at all
-      try {
-        console.log("Trying fallback - fetching all students");
-        const fallbackResponse = await api.get("/students");
-        console.log("Fallback response:", fallbackResponse.data);
+      let errorMessage = "Failed to search students";
 
-        if (
-          Array.isArray(fallbackResponse.data) &&
-          fallbackResponse.data.length > 0
-        ) {
-          onError(
-            "Search failed, but API is working. Please check if there are students matching your search."
-          );
-        } else {
-          onError(
-            "No students found in the database. Please add students first."
-          );
-        }
-      } catch (fallbackError) {
-        console.error("Fallback also failed:", fallbackError);
-        onError(
-          "API connection failed: " +
-            (error.response?.data?.message || error.message)
-        );
+      if (error.response?.status === 404) {
+        errorMessage =
+          "Students endpoint not found. Please check the API configuration.";
+      } else if (error.response?.status === 500) {
+        errorMessage =
+          "Server error while searching students. Please try again.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
 
+      onError(errorMessage);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -158,7 +193,26 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       setSearchQuery("");
       setSearchResults([]);
     } catch (error: any) {
-      onError(error.response?.data?.message || "Failed to mark attendance");
+      // Check if this is an "already signed in" error
+      const errorMessage = error.response?.data?.message || "";
+      const errorData = error.response?.data;
+
+      if (
+        errorMessage.includes("already signed in") &&
+        errorData?.student &&
+        onAlreadySignedIn
+      ) {
+        // Trigger the "Already Signed In" modal
+        onAlreadySignedIn({
+          studentName: errorData.student.studentName,
+          studentId: errorData.student.studentId,
+          signInTime: errorData.student.signInTime,
+          session: session,
+        });
+      } else {
+        // Show regular error
+        onError(errorMessage || "Failed to mark attendance");
+      }
     } finally {
       setIsMarkingAttendance(false);
     }
