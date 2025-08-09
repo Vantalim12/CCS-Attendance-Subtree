@@ -256,30 +256,11 @@ const Layout: React.FC = () => {
       current: location.pathname === "/attendance",
     },
     {
-      name: "Excuse Letters",
-      href: "/excuse-letters",
-      icon: "excuses",
-      current: location.pathname === "/excuse-letters",
-    },
-    {
       name: "Reports",
       href: "/reports",
       icon: "reports",
       current: location.pathname === "/reports",
       adminOnly: true,
-    },
-    {
-      name: "Officer Exclusions",
-      href: "/officer-exclusions",
-      icon: "exclusions",
-      current: location.pathname === "/officer-exclusions",
-      adminOnly: true,
-    },
-    {
-      name: "Settings",
-      href: "/settings",
-      icon: "settings",
-      current: location.pathname === "/settings",
     },
   ];
 
@@ -429,10 +410,6 @@ const Layout: React.FC = () => {
                     {item.name}
                   </span>
                 )}
-                {/* Notification dot example */}
-                {item.name === "Excuse Letters" && (
-                  <div className="notification-dot" />
-                )}
               </Link>
             ))}
           </div>
@@ -470,15 +447,15 @@ const Layout: React.FC = () => {
       >
         {/* Top bar */}
         <header
-          className="glass-card sticky top-0 z-40 h-16 px-6 flex items-center justify-between"
-          style={{ borderBottom: "1px solid rgba(13, 26, 38, 0.1)" }}
+          className="glass-card sticky top-0 z-40 h-20 px-8 flex items-center justify-between shadow-lg"
+          style={{ borderBottom: "2px solid rgba(13, 26, 38, 0.1)" }}
         >
           {/* Page title */}
           <div>
-            <h2 className="text-xl font-display font-semibold text-ink capitalize">
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-ink capitalize">
               {location.pathname.replace("/", "").replace("-", " ") ||
                 "Dashboard"}
-            </h2>
+            </h1>
           </div>
 
           {/* Top bar actions */}
@@ -492,15 +469,15 @@ const Layout: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search..."
-                className="pl-10 pr-4 py-2 w-64 rounded-md border border-ink/20 bg-white/80 backdrop-blur-sm 
+                className="pl-12 pr-4 py-3 w-72 rounded-lg border border-ink/20 bg-white/80 backdrop-blur-sm 
                           focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent
-                          transition-all duration-200 ease-out text-sm"
+                          transition-all duration-200 ease-out text-base"
               />
             </div>
 
             {/* Notifications */}
             <button
-              className="relative p-2 rounded-md transition-colors duration-200"
+              className="relative p-3 rounded-lg transition-colors duration-200"
               onMouseEnter={(e) =>
                 (e.currentTarget.style.background = "rgba(14, 115, 115, 0.1)")
               }
@@ -508,20 +485,20 @@ const Layout: React.FC = () => {
                 (e.currentTarget.style.background = "transparent")
               }
             >
-              <IconComponent name="bell" className="w-5 h-5 text-ink" />
+              <IconComponent name="bell" className="w-6 h-6 text-ink" />
               <div className="notification-dot" />
             </button>
 
             {/* User menu */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <div className="text-right">
-                <div className="text-sm font-medium text-ink">
+                <div className="text-base font-medium text-ink">
                   {user?.email}
                 </div>
-                <div className="text-xs text-ink-muted">{user?.role}</div>
+                <div className="text-sm text-ink-muted">{user?.role}</div>
               </div>
-              <div className="w-8 h-8 rounded-full bg-gradient-brand flex items-center justify-center">
-                <IconComponent name="user" className="w-4 h-4 text-white" />
+              <div className="w-12 h-12 rounded-full bg-gradient-brand flex items-center justify-center">
+                <IconComponent name="user" className="w-6 h-6 text-white" />
               </div>
             </div>
           </div>

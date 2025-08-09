@@ -120,9 +120,7 @@ const Login: React.FC = () => {
 
             {/* Hero headline */}
             <h1 className="text-4xl md:text-6xl font-display font-bold text-ink mb-6 tracking-tight">
-              Automate. <span className="text-gradient">Track</span>. Report.
-              <br />
-              <span className="text-gradient">Powered by AI.</span>
+              <span className="text-gradient">CCS Attendance System</span>
             </h1>
 
             {/* Subcopy */}

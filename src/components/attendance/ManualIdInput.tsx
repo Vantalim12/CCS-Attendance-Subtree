@@ -32,6 +32,7 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       return;
     }
 
+    console.log("Starting search for:", searchQuery); // Debug log
     const searchTimeout = setTimeout(async () => {
       await searchStudents(searchQuery.trim());
     }, 300);
@@ -44,16 +45,62 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
 
     setIsSearching(true);
     try {
+      console.log("Searching for students with query:", query); // Debug log
       const response = await api.get(
         `/students?search=${encodeURIComponent(query)}`
       );
-      const students = Array.isArray(response.data) ? response.data : [];
+      console.log("Search response:", response.data); // Debug log
+      console.log("Response status:", response.status); // Debug log
+      console.log("Response headers:", response.headers); // Debug log
+
+      // Handle different response formats
+      let students = [];
+      if (Array.isArray(response.data)) {
+        students = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        students = response.data.data;
+      } else if (response.data && response.data.students) {
+        students = response.data.students;
+      } else {
+        console.warn("Unexpected response format:", response.data);
+        students = [];
+      }
+
+      console.log("Processed students:", students); // Debug log
+      console.log("Number of students found:", students.length); // Debug log
 
       // Limit to top 5 results for better UX
       setSearchResults(students.slice(0, 5));
     } catch (error: any) {
       console.error("Error searching students:", error);
-      onError("Failed to search students");
+      console.error("Error details:", error.response?.data); // More detailed error log
+
+      // Try to fetch all students as a fallback to test if the API works at all
+      try {
+        console.log("Trying fallback - fetching all students");
+        const fallbackResponse = await api.get("/students");
+        console.log("Fallback response:", fallbackResponse.data);
+
+        if (
+          Array.isArray(fallbackResponse.data) &&
+          fallbackResponse.data.length > 0
+        ) {
+          onError(
+            "Search failed, but API is working. Please check if there are students matching your search."
+          );
+        } else {
+          onError(
+            "No students found in the database. Please add students first."
+          );
+        }
+      } catch (fallbackError) {
+        console.error("Fallback also failed:", fallbackError);
+        onError(
+          "API connection failed: " +
+            (error.response?.data?.message || error.message)
+        );
+      }
+
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -62,9 +109,18 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
 
   const handleStudentSelect = (student: Student) => {
     setSelectedStudent(student);
-    setSearchQuery(
-      `${student.studentId} - ${student.firstName} ${student.lastName}`
-    );
+
+    // Handle different name formats from the backend
+    let studentName = "";
+    if (student.firstName && student.lastName) {
+      studentName = `${student.firstName} ${student.lastName}`;
+    } else if ((student as any).studentName) {
+      studentName = (student as any).studentName;
+    } else {
+      studentName = "Unknown Name";
+    }
+
+    setSearchQuery(`${student.studentId} - ${studentName}`);
     setSearchResults([]);
   };
 
@@ -82,9 +138,19 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
         session,
       });
 
+      // Handle different name formats
+      let studentName = "";
+      if (selectedStudent.firstName && selectedStudent.lastName) {
+        studentName = `${selectedStudent.firstName} ${selectedStudent.lastName}`;
+      } else if ((selectedStudent as any).studentName) {
+        studentName = (selectedStudent as any).studentName;
+      } else {
+        studentName = "Unknown Name";
+      }
+
       onAttendanceMarked({
         studentId: selectedStudent.studentId,
-        studentName: `${selectedStudent.firstName} ${selectedStudent.lastName}`,
+        studentName: studentName,
       });
 
       // Clear selection after successful marking
@@ -168,7 +234,9 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
                       className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 focus:outline-none focus:bg-blue-50"
                     >
                       <div className="font-medium text-gray-900">
-                        {student.firstName} {student.lastName}
+                        {student.firstName && student.lastName
+                          ? `${student.firstName} ${student.lastName}`
+                          : (student as any).studentName || "Unknown Name"}
                       </div>
                       <div className="text-sm text-gray-600">
                         ID: {student.studentId} • {student.yearLevel}{" "}
@@ -199,7 +267,9 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
                 </h5>
                 <div className="text-blue-800">
                   <p className="font-medium">
-                    {selectedStudent.firstName} {selectedStudent.lastName}
+                    {selectedStudent.firstName && selectedStudent.lastName
+                      ? `${selectedStudent.firstName} ${selectedStudent.lastName}`
+                      : (selectedStudent as any).studentName || "Unknown Name"}
                   </p>
                   <p className="text-sm">ID: {selectedStudent.studentId}</p>
                   <p className="text-sm">
