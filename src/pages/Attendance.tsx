@@ -12,6 +12,7 @@ import LoadingSpinner from "../components/common/LoadingSpinner";
 import NotificationToast, {
   NotificationData,
 } from "../components/common/NotificationToast";
+import AlreadySignedInModal from "../components/common/AlreadySignedInModal";
 
 const Attendance: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
@@ -27,6 +28,19 @@ const Attendance: React.FC = () => {
   const [notification, setNotification] = useState<NotificationData | null>(
     null
   );
+  const [alreadySignedInModal, setAlreadySignedInModal] = useState<{
+    isOpen: boolean;
+    studentName: string;
+    studentId: string;
+    signInTime: string;
+    session: "morning" | "afternoon";
+  }>({
+    isOpen: false,
+    studentName: "",
+    studentId: "",
+    signInTime: "",
+    session: "morning",
+  });
   const { hasRole, user } = useAuth();
   const isAdmin = hasRole("admin");
 
@@ -91,7 +105,38 @@ const Attendance: React.FC = () => {
       // Keep scanner active for continuous scanning
       triggerRefresh();
     } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to mark attendance");
+      const errorMessage =
+        error.response?.data?.message || "Failed to mark attendance";
+
+      // Check if this is a duplicate scan error
+      if (
+        errorMessage.includes("already signed in") ||
+        errorMessage.includes("duplicate")
+      ) {
+        // Extract student information from the error response
+        const studentInfo = error.response?.data?.student;
+        if (studentInfo) {
+          setAlreadySignedInModal({
+            isOpen: true,
+            studentName:
+              studentInfo.studentName || studentInfo.name || "Unknown Student",
+            studentId: studentInfo.studentId || "Unknown ID",
+            signInTime: studentInfo.signInTime || new Date().toISOString(),
+            session: session,
+          });
+        } else {
+          // Fallback if no student info in error response
+          setAlreadySignedInModal({
+            isOpen: true,
+            studentName: "Student",
+            studentId: "Unknown",
+            signInTime: new Date().toISOString(),
+            session: session,
+          });
+        }
+      } else {
+        setError(errorMessage);
+      }
       // Keep scanner active even on error for retry
     }
   };
@@ -148,8 +193,8 @@ const Attendance: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+      <div className="glass-card-lg p-6">
+        <h1 className="text-2xl font-display font-bold text-ink mb-4">
           Attendance Management
         </h1>
 
@@ -204,9 +249,9 @@ const Attendance: React.FC = () => {
 
         {/* Selected Event Info */}
         {selectedEvent && (
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <h3 className="font-medium text-blue-900">{selectedEvent.title}</h3>
-            <p className="text-blue-700 text-sm">
+          <div className="glass-card bg-primary/5 border-primary/20 p-4">
+            <h3 className="font-medium text-primary">{selectedEvent.title}</h3>
+            <p className="text-primary-600 text-sm">
               Date: {new Date(selectedEvent.eventDate).toLocaleDateString()} |
               Time: {selectedEvent.startTime} - {selectedEvent.endTime}
             </p>
@@ -216,20 +261,50 @@ const Attendance: React.FC = () => {
 
       {/* Success/Error Messages */}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-md p-4">
-          <p className="text-green-800">{success}</p>
+        <div className="glass-card bg-green-50 border-green-200 p-4 animate-fade-in">
+          <div className="flex items-center space-x-2">
+            <svg
+              className="w-5 h-5 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p className="text-green-800">{success}</p>
+          </div>
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-800">{error}</p>
+        <div className="glass-card bg-red-50 border-red-200 p-4 animate-fade-in">
+          <div className="flex items-center space-x-2">
+            <svg
+              className="w-5 h-5 text-red-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+            <p className="text-red-800">{error}</p>
+          </div>
         </div>
       )}
 
       {/* Tab Navigation */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="border-b border-gray-200">
+      <div className="glass-card-lg">
+        <div className="border-b border-ink/10">
           <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
             {tabs.map((tab) => (
               <button
@@ -241,9 +316,9 @@ const Attendance: React.FC = () => {
                 }}
                 className={`${
                   activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                    ? "border-primary text-primary"
+                    : "border-transparent text-ink-muted hover:text-ink hover:border-ink/30"
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors duration-200`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
@@ -257,15 +332,30 @@ const Attendance: React.FC = () => {
           {activeTab === "scan" && (
             <div className="space-y-6">
               <div className="text-center">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                <h3 className="text-lg font-display font-semibold text-ink mb-4">
                   QR Code Scanner
                 </h3>
 
                 {!selectedEvent ? (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                    <p className="text-yellow-800">
-                      Please select an event to start scanning
-                    </p>
+                  <div className="glass-card bg-amber-50 border-amber-200 p-4">
+                    <div className="flex items-center justify-center space-x-2">
+                      <svg
+                        className="w-5 h-5 text-amber-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
+                        />
+                      </svg>
+                      <p className="text-amber-800">
+                        Please select an event to start scanning
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -377,6 +467,18 @@ const Attendance: React.FC = () => {
       <NotificationToast
         notification={notification}
         onClose={clearNotification}
+      />
+
+      {/* Already Signed In Modal */}
+      <AlreadySignedInModal
+        isOpen={alreadySignedInModal.isOpen}
+        onClose={() =>
+          setAlreadySignedInModal((prev) => ({ ...prev, isOpen: false }))
+        }
+        studentName={alreadySignedInModal.studentName}
+        studentId={alreadySignedInModal.studentId}
+        signInTime={alreadySignedInModal.signInTime}
+        session={alreadySignedInModal.session}
       />
     </div>
   );
