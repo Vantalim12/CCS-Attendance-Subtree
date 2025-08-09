@@ -76,7 +76,7 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
 
     setIsMarkingAttendance(true);
     try {
-      await api.post("/attendance/manual-signin", {
+      await api.post("/attendance/manual-sign-in", {
         studentId: selectedStudent._id,
         eventId: selectedEvent._id,
         session,
