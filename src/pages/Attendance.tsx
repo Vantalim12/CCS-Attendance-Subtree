@@ -304,7 +304,10 @@ const Attendance: React.FC = () => {
 
       {/* Tab Navigation */}
       <div className="glass-card-lg">
-        <div className="border-b border-ink/10">
+        <div
+          className="border-b"
+          style={{ borderColor: "rgba(13, 26, 38, 0.1)" }}
+        >
           <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
             {tabs.map((tab) => (
               <button
@@ -317,8 +320,20 @@ const Attendance: React.FC = () => {
                 className={`${
                   activeTab === tab.id
                     ? "border-primary text-primary"
-                    : "border-transparent text-ink-muted hover:text-ink hover:border-ink/30"
+                    : "border-transparent text-ink-muted"
                 } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors duration-200`}
+                onMouseEnter={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.color = "var(--color-ink)";
+                    e.currentTarget.style.borderColor = "rgba(13, 26, 38, 0.3)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.color = "var(--color-ink-muted)";
+                    e.currentTarget.style.borderColor = "transparent";
+                  }
+                }}
               >
                 <span>{tab.icon}</span>
                 {tab.label}

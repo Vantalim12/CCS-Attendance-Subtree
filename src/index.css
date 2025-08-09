@@ -58,7 +58,7 @@ code {
 /* Glassmorphism Component Classes */
 @layer components {
   .glass-card {
-    @apply bg-white/60 backdrop-blur-glass border border-ink/8 rounded-glass shadow-glass;
+    @apply bg-white/60 backdrop-blur-glass rounded-glass shadow-glass;
     background: linear-gradient(
       135deg,
       rgba(255, 255, 255, 0.1),
@@ -69,7 +69,7 @@ code {
   }
 
   .glass-card-lg {
-    @apply bg-white/60 backdrop-blur-glass border border-ink/8 rounded-glass-lg shadow-glass-lg;
+    @apply bg-white/60 backdrop-blur-glass rounded-glass-lg shadow-glass-lg;
     background: linear-gradient(
       135deg,
       rgba(255, 255, 255, 0.12),
@@ -158,16 +158,18 @@ code {
   }
 
   .input-field {
-    @apply w-full px-4 py-3 rounded-md border border-ink/20 bg-white/80 backdrop-blur-sm;
-    @apply focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent;
+    @apply w-full px-4 py-3 rounded-md bg-white/80 backdrop-blur-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-accent;
     @apply transition-all duration-200 ease-out;
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(37, 58, 72, 0.2);
   }
 
   .input-field:focus {
     background: rgba(255, 255, 255, 0.95);
     box-shadow: 0 0 0 3px rgba(64, 211, 200, 0.1);
+    border-color: var(--color-accent);
   }
 
   .label {
@@ -228,11 +230,16 @@ code {
 
   .sidebar-item {
     @apply flex items-center px-4 py-3 rounded-md transition-all duration-200 ease-out;
-    @apply hover:bg-primary/10 hover:text-primary-600;
+    color: var(--color-ink-muted);
+  }
+
+  .sidebar-item:hover {
+    background: rgba(14, 115, 115, 0.1);
+    color: var(--color-primary-600);
   }
 
   .sidebar-item.active {
-    @apply bg-accent/20 text-primary;
+    color: var(--color-primary);
     background: linear-gradient(
       135deg,
       rgba(64, 211, 200, 0.15),

@@ -344,10 +344,19 @@ const Layout: React.FC = () => {
         onMouseLeave={handleSidebarLeave}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center h-16 px-4 border-b border-ink/10">
+        <div
+          className="flex items-center h-16 px-4"
+          style={{ borderBottom: "1px solid rgba(13, 26, 38, 0.1)" }}
+        >
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md hover:bg-primary/10 transition-colors duration-200"
+            className="p-2 rounded-md transition-colors duration-200"
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "rgba(14, 115, 115, 0.1)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
             aria-label="Toggle sidebar"
           >
             <IconComponent name="menu" className="w-5 h-5 text-ink" />
@@ -361,10 +370,22 @@ const Layout: React.FC = () => {
               <button
                 onClick={togglePin}
                 className={`p-1.5 rounded-md transition-colors duration-200 ${
-                  isPinned
-                    ? "bg-accent/20 text-primary"
-                    : "hover:bg-primary/10 text-ink-muted"
+                  isPinned ? "text-primary" : "text-ink-muted"
                 }`}
+                style={
+                  isPinned ? { background: "rgba(64, 211, 200, 0.2)" } : {}
+                }
+                onMouseEnter={(e) => {
+                  if (!isPinned) {
+                    e.currentTarget.style.background =
+                      "rgba(14, 115, 115, 0.1)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isPinned) {
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
                 aria-label={isPinned ? "Unpin sidebar" : "Pin sidebar"}
               >
                 <svg
@@ -418,10 +439,19 @@ const Layout: React.FC = () => {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-ink/10">
+        <div
+          className="absolute bottom-0 left-0 right-0 p-4"
+          style={{ borderTop: "1px solid rgba(13, 26, 38, 0.1)" }}
+        >
           <button
             onClick={logout}
-            className="sidebar-item w-full text-red-600 hover:bg-red-50"
+            className="sidebar-item w-full text-red-600"
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "rgba(254, 242, 242, 1)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "transparent")
+            }
             title={!isSidebarExpanded ? "Sign out" : undefined}
           >
             <IconComponent name="logout" className="w-5 h-5 flex-shrink-0" />
@@ -439,7 +469,10 @@ const Layout: React.FC = () => {
         }`}
       >
         {/* Top bar */}
-        <header className="glass-card sticky top-0 z-40 h-16 px-6 flex items-center justify-between border-b border-ink/10">
+        <header
+          className="glass-card sticky top-0 z-40 h-16 px-6 flex items-center justify-between"
+          style={{ borderBottom: "1px solid rgba(13, 26, 38, 0.1)" }}
+        >
           {/* Page title */}
           <div>
             <h2 className="text-xl font-display font-semibold text-ink capitalize">
@@ -466,7 +499,15 @@ const Layout: React.FC = () => {
             </div>
 
             {/* Notifications */}
-            <button className="relative p-2 rounded-md hover:bg-primary/10 transition-colors duration-200">
+            <button
+              className="relative p-2 rounded-md transition-colors duration-200"
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "rgba(14, 115, 115, 0.1)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "transparent")
+              }
+            >
               <IconComponent name="bell" className="w-5 h-5 text-ink" />
               <div className="notification-dot" />
             </button>

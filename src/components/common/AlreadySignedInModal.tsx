@@ -70,10 +70,16 @@ const AlreadySignedInModal: React.FC<AlreadySignedInModalProps> = ({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="glass-card-lg max-w-md w-full animate-slide-in">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-ink/10">
+          <div
+            className="flex items-center justify-between p-6"
+            style={{ borderBottom: "1px solid rgba(13, 26, 38, 0.1)" }}
+          >
             <div className="flex items-center space-x-3">
               {/* Info icon */}
-              <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: "rgba(64, 211, 200, 0.2)" }}
+              >
                 <svg
                   className="w-5 h-5 text-accent"
                   fill="none"
@@ -119,7 +125,10 @@ const AlreadySignedInModal: React.FC<AlreadySignedInModalProps> = ({
           <div className="p-6">
             <div className="space-y-4">
               {/* Student info */}
-              <div className="glass-card p-4 bg-accent/5">
+              <div
+                className="glass-card p-4"
+                style={{ background: "rgba(64, 211, 200, 0.05)" }}
+              >
                 <div className="flex items-center space-x-4">
                   {/* Avatar */}
                   <div className="w-12 h-12 rounded-full bg-gradient-brand flex items-center justify-center">
@@ -174,7 +183,13 @@ const AlreadySignedInModal: React.FC<AlreadySignedInModalProps> = ({
               </div>
 
               {/* Message */}
-              <div className="p-4 rounded-md bg-accent/10 border border-accent/20">
+              <div
+                className="p-4 rounded-md"
+                style={{
+                  background: "rgba(64, 211, 200, 0.1)",
+                  border: "1px solid rgba(64, 211, 200, 0.2)",
+                }}
+              >
                 <p className="text-sm text-ink text-center">
                   This student has already signed in for the {session} session.
                   <br />
