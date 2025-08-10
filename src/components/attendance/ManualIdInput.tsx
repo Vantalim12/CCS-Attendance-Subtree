@@ -55,6 +55,20 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       console.log("Searching for students with query:", query);
       console.log("Encoded query:", encodeURIComponent(query));
 
+      // Check authentication status
+      const token = localStorage.getItem("token");
+      const user = localStorage.getItem("user");
+      console.log("Token exists:", !!token);
+      console.log("User exists:", !!user);
+      if (user) {
+        try {
+          const parsedUser = JSON.parse(user);
+          console.log("User role:", parsedUser.role);
+        } catch (e) {
+          console.log("Error parsing user:", e);
+        }
+      }
+
       const response = await api.get(
         `/students?search=${encodeURIComponent(query)}`
       );
@@ -123,7 +137,11 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
 
       let errorMessage = "Failed to search students";
 
-      if (error.response?.status === 404) {
+      if (error.response?.status === 401) {
+        errorMessage = "Authentication required. Please log in again.";
+      } else if (error.response?.status === 403) {
+        errorMessage = "Insufficient permissions to search students.";
+      } else if (error.response?.status === 404) {
         errorMessage =
           "Students endpoint not found. Please check the API configuration.";
       } else if (error.response?.status === 500) {
@@ -134,6 +152,8 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       } else if (error.message) {
         errorMessage = error.message;
       }
+
+      console.log("Final error message:", errorMessage);
 
       onError(errorMessage);
       setSearchResults([]);
