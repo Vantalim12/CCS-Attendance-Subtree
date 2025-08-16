@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import CCSLogo from "../CCS_FINAL_LOGO.png";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -36,21 +37,11 @@ const Login: React.FC = () => {
             {/* Logo */}
             <div className="flex justify-start lg:w-0 lg:flex-1">
               <div className="flex items-center">
-                <div className="w-10 h-10 rounded-lg bg-gradient-brand flex items-center justify-center floating-glow">
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
+<img
+  src={CCSLogo}
+  alt="CCS Logo"
+  className="w-10 h-10 rounded-lg floating-glow"
+/>
                 <span className="ml-3 text-xl font-display font-bold text-ink">
                   CCS System
                 </span>
@@ -73,21 +64,11 @@ const Login: React.FC = () => {
           <div className="text-center">
             {/* Product mark with glow */}
             <div className="flex justify-center mb-8">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-brand flex items-center justify-center floating-glow">
-                <svg
-                  className="w-10 h-10 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
+<img
+  src={CCSLogo}
+  alt="CCS Logo"
+  className="w-20 h-20 rounded-lg floating-glow"
+/>
             </div>
 
             {/* Hero headline */}
@@ -207,21 +188,11 @@ const Login: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center">
-              <div className="w-8 h-8 rounded-md bg-gradient-brand flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
+<img
+  src={CCSLogo}
+  alt="CCS Logo"
+  className="w-10 h-10 rounded-lg floating-glow"
+/>
               <span className="ml-2 font-display font-bold text-ink">
                 CCS System
               </span>
