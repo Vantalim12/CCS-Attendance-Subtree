@@ -37,13 +37,13 @@ const Login: React.FC = () => {
             {/* Logo */}
             <div className="flex justify-start lg:w-0 lg:flex-1">
               <div className="flex items-center">
-<img
-  src={CCSLogo}
-  alt="CCS Logo"
-  className="w-10 h-10 rounded-lg floating-glow"
-/>
+                <img
+                  src={CCSLogo}
+                  alt="CCS Logo"
+                  className="w-10 h-10 rounded-lg floating-glow"
+                />
                 <span className="ml-3 text-xl font-display font-bold text-ink">
-                  CCS System
+                  CCS TABCOM Attendance System
                 </span>
               </div>
             </div>
@@ -64,11 +64,11 @@ const Login: React.FC = () => {
           <div className="text-center">
             {/* Product mark with glow */}
             <div className="flex justify-center mb-8">
-<img
-  src={CCSLogo}
-  alt="CCS Logo"
-  className="w-20 h-20 rounded-lg floating-glow"
-/>
+              <img
+                src={CCSLogo}
+                alt="CCS Logo"
+                className="w-20 h-20 rounded-lg floating-glow"
+              />
             </div>
 
             {/* Hero headline */}
@@ -188,21 +188,22 @@ const Login: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center">
-<img
-  src={CCSLogo}
-  alt="CCS Logo"
-  className="w-10 h-10 rounded-lg floating-glow"
-/>
+              <img
+                src={CCSLogo}
+                alt="CCS Logo"
+                className="w-10 h-10 rounded-lg floating-glow"
+              />
               <span className="ml-2 font-display font-bold text-ink">
-                CCS System
+                CCS TABCOM Attendance System
               </span>
             </div>
             <p className="text-sm text-ink-muted">
-              Modern attendance management for educational institutions.
+              Modern attendance management for students in MSU-IIT.
             </p>
             <div className="mt-8 pt-8 border-t border-ink/10">
               <p className="text-sm text-ink-muted">
-                © 2024 CCS Attendance System. All rights reserved.
+                © 2025 CCS Tabulation Committee Attendance System. All rights
+                reserved.
               </p>
             </div>
           </div>
