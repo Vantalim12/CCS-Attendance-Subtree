@@ -61,9 +61,11 @@ class AuthService {
       const authData = response.data;
 
       // Store token and user data
-
       localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
+
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new Event("auth-change"));
 
       return authData;
     } catch (error: any) {
@@ -84,6 +86,9 @@ class AuthService {
       localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
 
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new Event("auth-change"));
+
       return authData;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Registration failed");
@@ -93,6 +98,10 @@ class AuthService {
   logout(): void {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event("auth-change"));
+
     window.location.href = "/login";
   }
 

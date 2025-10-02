@@ -32,6 +32,21 @@ export const useAuth = (): UseAuthReturn => {
     };
 
     initializeAuth();
+
+    // Listen for storage changes (when login happens in another component)
+    const handleStorageChange = () => {
+      const currentUser = authService.getCurrentUser();
+      setUser(currentUser);
+    };
+
+    // Listen for storage events (cross-tab) and custom events (same tab)
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("auth-change", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("auth-change", handleStorageChange);
+    };
   }, []);
 
   const login = useCallback(
@@ -83,7 +98,8 @@ export const useAuth = (): UseAuthReturn => {
     setUser(currentUser);
   }, []);
 
-  const isAuthenticated = authService.isAuthenticated() && !!user;
+  // Use authService directly for authentication check to avoid stale state
+  const isAuthenticated = authService.isAuthenticated();
 
   return {
     user,
