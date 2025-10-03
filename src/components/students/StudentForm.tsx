@@ -18,6 +18,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     studentId: "",
     firstName: "",
     lastName: "",
+    email: "",
     yearLevel: "",
     major: "",
     departmentProgram: "",
@@ -37,6 +38,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
         studentId: student.studentId,
         firstName: student.firstName,
         lastName: student.lastName,
+        email: student.email || "",
         yearLevel: student.yearLevel,
         major: student.major,
         departmentProgram: student.departmentProgram,
@@ -47,6 +49,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
         studentId: "",
         firstName: "",
         lastName: "",
+        email: "",
         yearLevel: "",
         major: "",
         departmentProgram: "",
@@ -101,6 +104,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
           studentId: "",
           firstName: "",
           lastName: "",
+          email: "",
           yearLevel: "",
           major: "",
           departmentProgram: "",
@@ -191,6 +195,23 @@ const StudentForm: React.FC<StudentFormProps> = ({
               placeholder="e.g., Dela Cruz"
               required
             />
+          </div>
+
+          {/* Email */}
+          <div className="md:col-span-2">
+            <label className="label">Email (Gmail for notifications)</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="input-field"
+              placeholder="e.g., student.email@gmail.com"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Optional. Student will receive attendance confirmations if
+              provided.
+            </p>
           </div>
 
           {/* Year Level */}
@@ -310,6 +331,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
             • Student ID should be unique and follow your institution's format
           </li>
           <li>• Full name should include first and last name</li>
+          <li>• Email is optional but required for attendance notifications</li>
           <li>• Select appropriate year level and status</li>
           <li>• QR code will be automatically generated upon creation</li>
           {student && (
