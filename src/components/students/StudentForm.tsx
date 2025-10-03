@@ -206,7 +206,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
               value={formData.email}
               onChange={handleChange}
               className="input-field"
-              placeholder="e.g., student.email@gmail.com"
+              placeholder="e.g., student.emil@gmail.com"
             />
             <p className="text-xs text-gray-500 mt-1">
               Optional. Student will receive attendance confirmations if
