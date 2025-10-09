@@ -13,6 +13,7 @@ import NotificationToast, {
   NotificationData,
 } from "../components/common/NotificationToast";
 import AlreadySignedInModal from "../components/common/AlreadySignedInModal";
+import SuccessModal from "../components/common/SuccessModal";
 
 const Attendance: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
@@ -39,6 +40,17 @@ const Attendance: React.FC = () => {
     studentName: "",
     studentId: "",
     signInTime: "",
+    session: "morning",
+  });
+  const [successModal, setSuccessModal] = useState<{
+    isOpen: boolean;
+    studentName: string;
+    studentId: string;
+    session: "morning" | "afternoon";
+  }>({
+    isOpen: false,
+    studentName: "",
+    studentId: "",
     session: "morning",
   });
   const { hasRole, user } = useAuth();
@@ -87,16 +99,14 @@ const Attendance: React.FC = () => {
         session,
       });
 
-      // Show success notification with student information
+      // Show success modal with student information
       const studentInfo = response.data.student;
       if (studentInfo) {
-        setNotification({
-          type: "success",
-          title: "Attendance Marked Successfully!",
-          message: `${studentInfo.studentName} (ID: ${
-            studentInfo.studentId
-          }) - ${session.charAt(0).toUpperCase() + session.slice(1)} Session`,
-          duration: 4000,
+        setSuccessModal({
+          isOpen: true,
+          studentName: studentInfo.studentName || "Unknown Student",
+          studentId: studentInfo.studentId || "Unknown ID",
+          session: session,
         });
       } else {
         setSuccess(`Attendance marked successfully for ${session} session!`);
@@ -153,13 +163,11 @@ const Attendance: React.FC = () => {
     studentId: string;
     studentName: string;
   }) => {
-    setNotification({
-      type: "success",
-      title: "Attendance Marked Successfully!",
-      message: `${studentData.studentName} (ID: ${studentData.studentId}) - ${
-        session.charAt(0).toUpperCase() + session.slice(1)
-      } Session`,
-      duration: 4000,
+    setSuccessModal({
+      isOpen: true,
+      studentName: studentData.studentName,
+      studentId: studentData.studentId,
+      session: session,
     });
     triggerRefresh();
   };
@@ -484,10 +492,19 @@ const Attendance: React.FC = () => {
         </div>
       </div>
 
-      {/* Notification Toast */}
+      {/* Notification Toast (for errors and other notifications) */}
       <NotificationToast
         notification={notification}
         onClose={clearNotification}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal((prev) => ({ ...prev, isOpen: false }))}
+        studentName={successModal.studentName}
+        studentId={successModal.studentId}
+        session={successModal.session}
       />
 
       {/* Already Signed In Modal */}

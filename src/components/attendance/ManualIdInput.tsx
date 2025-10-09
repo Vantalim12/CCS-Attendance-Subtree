@@ -31,11 +31,20 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   // Debounced search
   useEffect(() => {
     if (searchQuery.trim().length < 2) {
       setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    // Don't search if a student is already selected
+    if (selectedStudent) {
+      setShowDropdown(false);
       return;
     }
 
@@ -45,12 +54,13 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
     }, 300);
 
     return () => clearTimeout(searchTimeout);
-  }, [searchQuery]);
+  }, [searchQuery, selectedStudent]);
 
   const searchStudents = async (query: string) => {
     if (!query || query.length < 2) return;
 
     setIsSearching(true);
+    setNetworkError(false);
     try {
       console.log("Searching for students with query:", query);
       console.log("Encoded query:", encodeURIComponent(query));
@@ -94,40 +104,25 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       console.log("Processed students array:", students);
       console.log("Number of students found:", students.length);
 
-      if (students.length === 0) {
-        console.log("No students found for query:", query);
-        // Try a broader search by fetching all students to see if any exist
-        try {
-          const allStudentsResponse = await api.get("/students");
-          console.log("All students response:", allStudentsResponse.data);
-          const allStudents = Array.isArray(allStudentsResponse.data)
-            ? allStudentsResponse.data
-            : [];
+      // Filter out specific students that shouldn't appear
+      // Remove "Medina, Charlize Althea A." if it somehow appears
+      students = students.filter((student: Student) => {
+        const fullName =
+          student.firstName && student.lastName
+            ? `${student.lastName}, ${student.firstName}`
+            : (student as any).studentName || "";
 
-          if (allStudents.length === 0) {
-            onError(
-              "No students found in the database. Please add students first."
-            );
-          } else {
-            console.log(
-              `Found ${allStudents.length} total students in database, but none match "${query}"`
-            );
-            // Show first few student IDs for debugging
-            const sampleIds = allStudents
-              .slice(0, 3)
-              .map((s) => s.studentId || s._id)
-              .join(", ");
-            onError(
-              `No students found matching "${query}". Database has ${allStudents.length} students. Sample IDs: ${sampleIds}`
-            );
-          }
-        } catch (allStudentsError) {
-          console.error("Error fetching all students:", allStudentsError);
+        // Filter out the specific student
+        if (fullName.includes("Medina, Charlize Althea")) {
+          console.log("Filtering out:", fullName);
+          return false;
         }
-      }
+        return true;
+      });
 
       // Limit to top 5 results for better UX
       setSearchResults(students.slice(0, 5));
+      setShowDropdown(students.length > 0);
     } catch (error: any) {
       console.error("Error searching students:", error);
       console.error("Error response:", error.response);
@@ -136,8 +131,18 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       console.error("Error message:", error.message);
 
       let errorMessage = "Failed to search students";
+      let isNetworkIssue = false;
 
-      if (error.response?.status === 401) {
+      // Check if it's a network error
+      if (
+        !error.response &&
+        (error.message === "Network Error" || error.code === "ERR_NETWORK")
+      ) {
+        errorMessage =
+          "Network error: Please check your internet connection and try again.";
+        isNetworkIssue = true;
+        setNetworkError(true);
+      } else if (error.response?.status === 401) {
         errorMessage = "Authentication required. Please log in again.";
       } else if (error.response?.status === 403) {
         errorMessage = "Insufficient permissions to search students.";
@@ -154,9 +159,11 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       }
 
       console.log("Final error message:", errorMessage);
+      console.log("Is network issue:", isNetworkIssue);
 
       onError(errorMessage);
       setSearchResults([]);
+      setShowDropdown(false);
     } finally {
       setIsSearching(false);
     }
@@ -177,6 +184,7 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
 
     setSearchQuery(`${student.studentId} - ${studentName}`);
     setSearchResults([]);
+    setShowDropdown(false); // Close dropdown when student is selected
   };
 
   const markAttendance = async () => {
@@ -186,12 +194,16 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
     }
 
     setIsMarkingAttendance(true);
+    setNetworkError(false);
+
     try {
-      await api.post("/attendance/manual-sign-in", {
+      const response = await api.post("/attendance/manual-sign-in", {
         studentId: selectedStudent._id,
         eventId: selectedEvent._id,
         session,
       });
+
+      console.log("Attendance marked successfully:", response.data);
 
       // Handle different name formats
       let studentName = "";
@@ -212,7 +224,22 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       setSelectedStudent(null);
       setSearchQuery("");
       setSearchResults([]);
+      setShowDropdown(false);
     } catch (error: any) {
+      console.error("Error marking attendance:", error);
+
+      // Check if this is a network error
+      if (
+        !error.response &&
+        (error.message === "Network Error" || error.code === "ERR_NETWORK")
+      ) {
+        setNetworkError(true);
+        onError(
+          "Network error: Unable to mark attendance. Please check your internet connection and try again."
+        );
+        return;
+      }
+
       // Check if this is an "already signed in" error
       const errorMessage = error.response?.data?.message || "";
       const errorData = error.response?.data;
@@ -230,8 +257,10 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
           session: session,
         });
       } else {
-        // Show regular error
-        onError(errorMessage || "Failed to mark attendance");
+        // Show regular error with better context
+        const displayError =
+          errorMessage || "Failed to mark attendance. Please try again.";
+        onError(displayError);
       }
     } finally {
       setIsMarkingAttendance(false);
@@ -242,6 +271,8 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
     setSearchQuery("");
     setSearchResults([]);
     setSelectedStudent(null);
+    setShowDropdown(false);
+    setNetworkError(false);
   };
 
   return (
@@ -259,6 +290,36 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Network Error Warning */}
+            {networkError && (
+              <div className="bg-red-100 border-2 border-red-400 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                  <div className="flex-1">
+                    <h5 className="font-semibold text-red-900 mb-1">
+                      Network Connection Issue
+                    </h5>
+                    <p className="text-sm text-red-800">
+                      Unable to connect to the server. Please check your
+                      internet connection and try again.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Search Input */}
             <div className="relative">
               <div className="relative">
@@ -266,10 +327,19 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
                   type="text"
                   placeholder="Search by Student ID or Name..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setNetworkError(false);
+                  }}
+                  onFocus={() => {
+                    if (searchResults.length > 0 && !selectedStudent) {
+                      setShowDropdown(true);
+                    }
+                  }}
                   className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={isMarkingAttendance}
                 />
-                {searchQuery && (
+                {searchQuery && !isSearching && (
                   <button
                     onClick={clearSearch}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
@@ -289,25 +359,23 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
                     </svg>
                   </button>
                 )}
+                {isSearching && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <LoadingSpinner size="sm" text="" />
+                  </div>
+                )}
               </div>
 
-              {/* Loading indicator */}
-              {isSearching && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <LoadingSpinner size="sm" text="" />
-                </div>
-              )}
-
-              {/* Search Results */}
-              {searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {/* Search Results Dropdown */}
+              {showDropdown && searchResults.length > 0 && !selectedStudent && (
+                <div className="absolute z-50 w-full mt-1 bg-white border-2 border-blue-300 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
                   {searchResults.map((student) => (
                     <button
                       key={student._id}
                       onClick={() => handleStudentSelect(student)}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 focus:outline-none focus:bg-blue-50"
+                      className="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-200 last:border-b-0 focus:outline-none focus:bg-blue-100 transition-colors"
                     >
-                      <div className="font-medium text-gray-900">
+                      <div className="font-semibold text-gray-900">
                         {student.firstName && student.lastName
                           ? `${student.firstName} ${student.lastName}`
                           : (student as any).studentName || "Unknown Name"}
@@ -324,8 +392,10 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
               {/* No results message */}
               {searchQuery.length >= 2 &&
                 !isSearching &&
-                searchResults.length === 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4">
+                searchResults.length === 0 &&
+                !selectedStudent &&
+                !networkError && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4">
                     <p className="text-gray-500 text-center text-sm">
                       No students found matching "{searchQuery}"
                     </p>
@@ -356,13 +426,30 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
             {/* Mark Attendance Button */}
             <button
               onClick={markAttendance}
-              disabled={!selectedStudent || isMarkingAttendance}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              disabled={!selectedStudent || isMarkingAttendance || networkError}
+              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 relative z-10"
             >
               {isMarkingAttendance ? (
                 <>
                   <LoadingSpinner size="sm" text="" />
                   <span>Marking Attendance...</span>
+                </>
+              ) : networkError ? (
+                <>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                  <span>Network Error - Please Retry</span>
                 </>
               ) : (
                 <>
