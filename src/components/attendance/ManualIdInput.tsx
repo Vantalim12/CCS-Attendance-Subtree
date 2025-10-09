@@ -104,17 +104,23 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       console.log("Processed students array:", students);
       console.log("Number of students found:", students.length);
 
-      // Filter out specific students that shouldn't appear
-      // Remove "Medina, Charlize Althea A." if it somehow appears
-      students = students.filter((student: Student) => {
-        const fullName =
-          student.firstName && student.lastName
-            ? `${student.lastName}, ${student.firstName}`
-            : (student as any).studentName || "";
+      // Filter out specific test/dummy students that shouldn't appear in search
+      const excludedStudentIds = [
+        "2025-1405", // Medina, Charlize Althea A.
+        "2024-2809", // Gallarde, Christine
+      ];
 
-        // Filter out the specific student
-        if (fullName.includes("Medina, Charlize Althea")) {
-          console.log("Filtering out:", fullName);
+      students = students.filter((student: Student) => {
+        // Filter by student ID (more reliable than name)
+        if (excludedStudentIds.includes(student.studentId)) {
+          console.log(
+            "Filtering out student:",
+            student.studentId,
+            "-",
+            student.firstName && student.lastName
+              ? `${student.lastName}, ${student.firstName}`
+              : (student as any).studentName || "Unknown"
+          );
           return false;
         }
         return true;
