@@ -107,6 +107,65 @@ const StudentList: React.FC<StudentListProps> = ({
     }
   };
 
+  const handleExportToCSV = () => {
+    // Define CSV headers
+    const headers = [
+      "Student ID",
+      "First Name",
+      "Last Name",
+      "Year Level",
+      "Major",
+      "Department/Program",
+      "Status",
+      "QR Code Data",
+      "Created At"
+    ];
+
+    // Convert student data to CSV rows
+    const rows = filteredStudents.map((student) => [
+      student.studentId,
+      student.firstName,
+      student.lastName,
+      student.yearLevel,
+      student.major,
+      student.departmentProgram,
+      student.status,
+      student.qrCodeData,
+      new Date(student.createdAt).toLocaleString()
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row.map((cell) => {
+          // Escape cells containing commas, quotes, or newlines
+          const cellStr = String(cell);
+          if (cellStr.includes(",") || cellStr.includes('"') || cellStr.includes("\n")) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(",")
+      )
+    ].join("\n");
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `students_export_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const getStatusBadge = (status: string) => {
     const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
     switch (status) {
@@ -221,17 +280,27 @@ const StudentList: React.FC<StudentListProps> = ({
           <p className="text-sm text-gray-600">
             Showing {filteredStudents.length} of {students.length} students
           </p>
-          <button
-            onClick={() => {
-              setSearchTerm("");
-              setStatusFilter("all");
-              setYearFilter("all");
-              setMajorFilter("all");
-            }}
-            className="btn-secondary text-sm"
-          >
-            Clear Filters
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleExportToCSV}
+              disabled={filteredStudents.length === 0}
+              className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export filtered students to CSV"
+            >
+              📥 Export to CSV
+            </button>
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("all");
+                setYearFilter("all");
+                setMajorFilter("all");
+              }}
+              className="btn-secondary text-sm"
+            >
+              Clear Filters
+            </button>
+          </div>
         </div>
       </div>
 
