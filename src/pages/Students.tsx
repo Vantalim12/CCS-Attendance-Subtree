@@ -13,7 +13,6 @@ const Students: React.FC = () => {
     "list"
   );
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -40,10 +39,6 @@ const Students: React.FC = () => {
 
   const triggerRefresh = () => {
     setRefreshTrigger((prev) => prev + 1);
-  };
-
-  const handleStudentSelect = (student: Student | null) => {
-    setSelectedStudent(student);
   };
 
   const handleEditStudent = (student: Student) => {
@@ -159,7 +154,6 @@ const Students: React.FC = () => {
           {activeTab === "list" && (
             <StudentList
               refreshTrigger={refreshTrigger}
-              onStudentSelect={handleStudentSelect}
               onEditStudent={handleEditStudent}
             />
           )}

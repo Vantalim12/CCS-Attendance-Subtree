@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Event } from "../../types";
 import { api } from "../../services/auth.service";
 import { useAuth } from "../../hooks/useAuth";
@@ -27,36 +27,10 @@ const EventList: React.FC<EventListProps> = ({
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
 
-  useEffect(() => {
-    fetchEvents();
-  }, [refreshTrigger]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [events, searchTerm, timeFilter]);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const response = await api.get("/events");
-      // Handle both old and new response formats
-      const eventsData = response.data.events || response.data;
-      setEvents(Array.isArray(eventsData) ? eventsData : []);
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to fetch events");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = events;
-    const now = new Date();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Search filter
     if (searchTerm) {
@@ -96,6 +70,29 @@ const EventList: React.FC<EventListProps> = ({
     });
 
     setFilteredEvents(filtered);
+  }, [events, searchTerm, timeFilter]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await api.get("/events");
+      // Handle both old and new response formats
+      const eventsData = response.data.events || response.data;
+      setEvents(Array.isArray(eventsData) ? eventsData : []);
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to fetch events");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEventClick = (event: Event) => {
@@ -130,7 +127,6 @@ const EventList: React.FC<EventListProps> = ({
   };
 
   const getEventStatus = (event: Event) => {
-    const now = new Date();
     const eventDate = new Date(event.eventDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);

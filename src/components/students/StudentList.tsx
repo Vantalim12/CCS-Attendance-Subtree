@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Student } from "../../types";
 import { api } from "../../services/auth.service";
 import { useAuth } from "../../hooks/useAuth";
@@ -27,28 +27,7 @@ const StudentList: React.FC<StudentListProps> = ({
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
 
-  useEffect(() => {
-    fetchStudents();
-  }, [refreshTrigger]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [students, searchTerm, statusFilter, yearFilter, majorFilter]);
-
-  const fetchStudents = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const response = await api.get("/students");
-      setStudents(response.data);
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to fetch students");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = students;
 
     // Search filter
@@ -82,6 +61,27 @@ const StudentList: React.FC<StudentListProps> = ({
     }
 
     setFilteredStudents(filtered);
+  }, [students, searchTerm, statusFilter, yearFilter, majorFilter]);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await api.get("/students");
+      setStudents(response.data);
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to fetch students");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStudentClick = (student: Student) => {

@@ -18,7 +18,6 @@ const ExcuseLetterForm: React.FC<ExcuseLetterFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
-  const { user } = useAuth();
 
   useEffect(() => {
     fetchEvents();

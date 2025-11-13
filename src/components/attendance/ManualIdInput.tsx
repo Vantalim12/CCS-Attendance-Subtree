@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Student, Event } from "../../types";
 import { api } from "../../services/auth.service";
 import LoadingSpinner from "../common/LoadingSpinner";
@@ -34,29 +34,7 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [networkError, setNetworkError] = useState(false);
 
-  // Debounced search
-  useEffect(() => {
-    if (searchQuery.trim().length < 2) {
-      setSearchResults([]);
-      setShowDropdown(false);
-      return;
-    }
-
-    // Don't search if a student is already selected
-    if (selectedStudent) {
-      setShowDropdown(false);
-      return;
-    }
-
-    console.log("Starting search for:", searchQuery); // Debug log
-    const searchTimeout = setTimeout(async () => {
-      await searchStudents(searchQuery.trim());
-    }, 300);
-
-    return () => clearTimeout(searchTimeout);
-  }, [searchQuery, selectedStudent]);
-
-  const searchStudents = async (query: string) => {
+  const searchStudents = useCallback(async (query: string) => {
     if (!query || query.length < 2) return;
 
     setIsSearching(true);
@@ -173,7 +151,29 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [onError]);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    // Don't search if a student is already selected
+    if (selectedStudent) {
+      setShowDropdown(false);
+      return;
+    }
+
+    console.log("Starting search for:", searchQuery); // Debug log
+    const searchTimeout = setTimeout(async () => {
+      await searchStudents(searchQuery.trim());
+    }, 300);
+
+    return () => clearTimeout(searchTimeout);
+  }, [searchQuery, selectedStudent, searchStudents]);
 
   const handleStudentSelect = (student: Student) => {
     setSelectedStudent(student);

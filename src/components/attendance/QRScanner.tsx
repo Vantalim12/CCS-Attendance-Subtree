@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 
 interface QRScannerProps {
@@ -28,43 +28,27 @@ const QRScanner: React.FC<QRScannerProps> = ({
     []
   );
 
-  useEffect(() => {
-    if (isActive && !isScanning) {
-      startScanner();
-    } else if (!isActive && isScanning) {
-      stopScanner();
+  const stopScanner = useCallback(() => {
+    if (scannerRef.current) {
+      try {
+        scannerRef.current.clear();
+      } catch (error) {
+        console.warn("Error clearing scanner:", error);
+      }
+      scannerRef.current = null;
     }
+    setIsScanning(false);
+    setIsProcessing(false);
+    setScanMessage("");
 
-    return () => {
-      if (scannerRef.current) {
-        stopScanner();
-      }
-      if (processingTimeoutRef.current) {
-        clearTimeout(processingTimeoutRef.current);
-      }
-    };
-  }, [isActive]);
-
-  useEffect(() => {
-    Html5Qrcode.getCameras()
-      .then((devices) => {
-        setCameras(
-          devices.map((device) => ({
-            id: device.id,
-            label: device.label || `Camera ${device.id}`,
-          }))
-        );
-        if (devices.length > 0) {
-          setCameraId(devices[0].id);
-        }
-      })
-      .catch((err) => {
-        console.error("Error getting cameras", err);
-        onScanError?.(err.toString());
-      });
+    // Clear any pending timeout
+    if (processingTimeoutRef.current) {
+      clearTimeout(processingTimeoutRef.current);
+      processingTimeoutRef.current = null;
+    }
   }, []);
 
-  const startScanner = async () => {
+  const startScanner = useCallback(async () => {
     if (scannerRef.current) {
       await stopScanner();
     }
@@ -153,27 +137,45 @@ const QRScanner: React.FC<QRScannerProps> = ({
       console.error("Error starting scanner:", error);
       onScanError?.(error instanceof Error ? error.message : String(error));
     }
-  };
+  }, [cameraId, onScanSuccess, autoRestart, restartDelay, stopScanner, onScanError]);
 
-  const stopScanner = () => {
-    if (scannerRef.current) {
-      try {
-        scannerRef.current.clear();
-      } catch (error) {
-        console.warn("Error clearing scanner:", error);
+  useEffect(() => {
+    Html5Qrcode.getCameras()
+      .then((devices) => {
+        setCameras(
+          devices.map((device) => ({
+            id: device.id,
+            label: device.label || `Camera ${device.id}`,
+          }))
+        );
+        if (devices.length > 0) {
+          setCameraId(devices[0].id);
+        }
+      })
+      .catch((err) => {
+        console.error("Error getting cameras", err);
+        if (onScanError) {
+          onScanError(err.toString());
+        }
+      });
+  }, [onScanError]);
+
+  useEffect(() => {
+    if (isActive && !isScanning) {
+      startScanner();
+    } else if (!isActive && isScanning) {
+      stopScanner();
+    }
+
+    return () => {
+      if (scannerRef.current) {
+        stopScanner();
       }
-      scannerRef.current = null;
-    }
-    setIsScanning(false);
-    setIsProcessing(false);
-    setScanMessage("");
-
-    // Clear any pending timeout
-    if (processingTimeoutRef.current) {
-      clearTimeout(processingTimeoutRef.current);
-      processingTimeoutRef.current = null;
-    }
-  };
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+    };
+  }, [isActive, isScanning, startScanner, stopScanner]);
 
   const manualRestart = () => {
     if (processingTimeoutRef.current) {

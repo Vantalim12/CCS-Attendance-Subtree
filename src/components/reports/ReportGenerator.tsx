@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api } from "../../services/auth.service";
-import { useAuth } from "../../hooks/useAuth";
 import LoadingSpinner from "../common/LoadingSpinner";
 import { Event, Student, Attendance } from "../../types";
 
@@ -57,39 +56,7 @@ const ReportGenerator: React.FC = () => {
     "summary" | "detailed" | "trends"
   >("summary");
 
-  const { hasRole } = useAuth();
-  const isAdmin = hasRole("admin");
-
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (events.length > 0 && students.length > 0) {
-      generateReport();
-    }
-  }, [filters, events, students]);
-
-  const fetchInitialData = async () => {
-    try {
-      setLoading(true);
-      const [eventsRes, studentsRes] = await Promise.all([
-        api.get("/events"),
-        api.get("/students"),
-      ]);
-
-      // Handle both old and new response formats
-      const eventsData = eventsRes.data.events || eventsRes.data;
-      setEvents(Array.isArray(eventsData) ? eventsData : []);
-      setStudents(studentsRes.data);
-    } catch (error: any) {
-      setError("Failed to fetch initial data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateReport = async () => {
+  const generateReport = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -113,7 +80,36 @@ const ReportGenerator: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  }, [filters]);
+
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
+      const [eventsRes, studentsRes] = await Promise.all([
+        api.get("/events"),
+        api.get("/students"),
+      ]);
+
+      // Handle both old and new response formats
+      const eventsData = eventsRes.data.events || eventsRes.data;
+      setEvents(Array.isArray(eventsData) ? eventsData : []);
+      setStudents(studentsRes.data);
+    } catch (error: any) {
+      setError("Failed to fetch initial data");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    if (events.length > 0 && students.length > 0) {
+      generateReport();
+    }
+  }, [filters, events, students, generateReport]);
 
   const calculateStatistics = (data: Attendance[]) => {
     if (data.length === 0) {

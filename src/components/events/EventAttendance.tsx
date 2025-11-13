@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Event, Attendance, Student } from "../../types";
 import { api } from "../../services/auth.service";
 import { useAuth } from "../../hooks/useAuth";
@@ -31,14 +31,69 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
 
+  const fetchEventAttendance = useCallback(async () => {
+    try {
+      const response = await api.get(`/events/${event._id}/attendance`);
+      console.log("Fetched attendance records:", response.data); // Debug log
+      setAttendanceRecords(response.data);
+    } catch (error) {
+      console.error("Failed to fetch event attendance:", error);
+    }
+  }, [event._id]);
+
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/students");
+      setStudents(response.data);
+    } catch (error) {
+      console.error("Failed to fetch students:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateStats = useCallback(() => {
+    // Only count students who have attendance records for this event
+    const totalStudents = attendanceRecords.length;
+    let presentMorning = 0,
+      presentAfternoon = 0;
+    let absentMorning = 0,
+      absentAfternoon = 0;
+    let excusedMorning = 0,
+      excusedAfternoon = 0;
+
+    attendanceRecords.forEach((attendance) => {
+      // Count morning session stats
+      if (attendance.morningStatus === "present") presentMorning++;
+      else if (attendance.morningStatus === "absent") absentMorning++;
+      else if (attendance.morningStatus === "excused") excusedMorning++;
+
+      // Count afternoon session stats
+      if (attendance.afternoonStatus === "present") presentAfternoon++;
+      else if (attendance.afternoonStatus === "absent") absentAfternoon++;
+      else if (attendance.afternoonStatus === "excused") excusedAfternoon++;
+    });
+
+    setStats({
+      totalStudents,
+      presentMorning,
+      presentAfternoon,
+      absentMorning,
+      absentAfternoon,
+      excusedMorning,
+      excusedAfternoon,
+    });
+  }, [attendanceRecords]);
+
   useEffect(() => {
     fetchEventAttendance();
     fetchStudents();
-  }, [event._id]);
+  }, [event._id, fetchEventAttendance]);
 
   useEffect(() => {
     calculateStats();
-  }, [attendanceRecords, students]);
+  }, [attendanceRecords, students, calculateStats]);
 
   // Refresh attendance data periodically during the event
   useEffect(() => {
@@ -78,66 +133,7 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
         clearInterval(refreshInterval);
       }
     };
-  }, [event._id, event.eventDate, event.startTime, event.endTime]);
-
-  const fetchEventAttendance = async () => {
-    try {
-      const response = await api.get(`/events/${event._id}/attendance`);
-      console.log("Fetched attendance records:", response.data); // Debug log
-      setAttendanceRecords(response.data);
-    } catch (error) {
-      console.error("Failed to fetch event attendance:", error);
-    }
-  };
-
-  const fetchStudents = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/students");
-      setStudents(response.data);
-    } catch (error) {
-      console.error("Failed to fetch students:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateStats = () => {
-    // Only count students who have attendance records for this event
-    const totalStudents = attendanceRecords.length;
-    let presentMorning = 0,
-      presentAfternoon = 0;
-    let absentMorning = 0,
-      absentAfternoon = 0;
-    let excusedMorning = 0,
-      excusedAfternoon = 0;
-
-    attendanceRecords.forEach((attendance) => {
-      // Count morning session stats
-      if (attendance.morningStatus === "present") presentMorning++;
-      else if (attendance.morningStatus === "absent") absentMorning++;
-      else if (attendance.morningStatus === "excused") excusedMorning++;
-
-      // Count afternoon session stats
-      if (attendance.afternoonStatus === "present") presentAfternoon++;
-      else if (attendance.afternoonStatus === "absent") absentAfternoon++;
-      else if (attendance.afternoonStatus === "excused") excusedAfternoon++;
-    });
-
-    setStats({
-      totalStudents,
-      presentMorning,
-      presentAfternoon,
-      absentMorning,
-      absentAfternoon,
-      excusedMorning,
-      excusedAfternoon,
-    });
-  };
-
-  const getStudentAttendance = (studentId: string) => {
-    return attendanceRecords.find((a) => a.student._id === studentId);
-  };
+  }, [event._id, event.eventDate, event.startTime, event.endTime, fetchEventAttendance]);
 
   const getFilteredStudents = () => {
     // Only show students who have attendance records

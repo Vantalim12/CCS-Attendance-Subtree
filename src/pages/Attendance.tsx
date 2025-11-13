@@ -8,7 +8,6 @@ import ManualAttendance from "../components/attendance/ManualAttendance";
 import ManualIdInput from "../components/attendance/ManualIdInput";
 import ExcuseLetterForm from "../components/excuses/ExcuseLetterForm";
 import ExcuseLetterList from "../components/excuses/ExcuseLetterList";
-import LoadingSpinner from "../components/common/LoadingSpinner";
 import NotificationToast, {
   NotificationData,
 } from "../components/common/NotificationToast";
@@ -53,7 +52,7 @@ const Attendance: React.FC = () => {
     studentId: "",
     session: "morning",
   });
-  const { hasRole, user } = useAuth();
+  const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
 
   useEffect(() => {

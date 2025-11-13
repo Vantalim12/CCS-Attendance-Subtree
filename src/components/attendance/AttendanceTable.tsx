@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Attendance, Event, Student } from "../../types";
+import React, { useState, useEffect, useCallback } from "react";
+import { Attendance, Event } from "../../types";
 import { api } from "../../services/auth.service";
 import LoadingSpinner from "../common/LoadingSpinner";
 
@@ -23,11 +23,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
   >("all");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchAttendanceRecords();
-  }, [selectedEvent, refreshTrigger]);
-
-  const fetchAttendanceRecords = async () => {
+  const fetchAttendanceRecords = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -46,7 +42,11 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedEvent]);
+
+  useEffect(() => {
+    fetchAttendanceRecords();
+  }, [fetchAttendanceRecords, refreshTrigger]);
 
   const filteredRecords = attendanceRecords.filter((record) => {
     const studentName = `${record.student?.firstName || ""} ${
