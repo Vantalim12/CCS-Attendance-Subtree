@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Event } from "../../types";
 import { api } from "../../services/auth.service";
-import { useAuth } from "../../hooks/useAuth";
 import LoadingSpinner from "../common/LoadingSpinner";
 
 interface ExcuseLetterFormProps {

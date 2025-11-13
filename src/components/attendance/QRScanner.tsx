@@ -137,7 +137,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
       console.error("Error starting scanner:", error);
       onScanError?.(error instanceof Error ? error.message : String(error));
     }
-  }, [cameraId, onScanSuccess, autoRestart, restartDelay, stopScanner, onScanError]);
+  }, [cameraId, onScanSuccess, autoRestart, restartDelay, stopScanner, onScanError, isProcessing]);
 
   useEffect(() => {
     Html5Qrcode.getCameras()
