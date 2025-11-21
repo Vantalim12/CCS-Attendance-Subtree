@@ -28,12 +28,17 @@ const QRScanner: React.FC<QRScannerProps> = ({
     []
   );
 
-  const stopScanner = useCallback(() => {
+  const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
       try {
-        scannerRef.current.clear();
+        // First stop the scanner if it's running
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+        // Then clear it
+        await scannerRef.current.clear();
       } catch (error) {
-        console.warn("Error clearing scanner:", error);
+        console.warn("Error stopping scanner:", error);
       }
       scannerRef.current = null;
     }
@@ -81,8 +86,8 @@ const QRScanner: React.FC<QRScannerProps> = ({
         (decodedText: string) => {
           const now = Date.now();
 
+          // Use ref to check processing state to avoid closure issues
           if (
-            isProcessing ||
             (lastScanRef.current === decodedText &&
               now - lastScanTimeRef.current < restartDelay)
           ) {
@@ -137,7 +142,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
       console.error("Error starting scanner:", error);
       onScanError?.(error instanceof Error ? error.message : String(error));
     }
-  }, [cameraId, onScanSuccess, autoRestart, restartDelay, stopScanner, onScanError, isProcessing]);
+  }, [cameraId, onScanSuccess, autoRestart, restartDelay, stopScanner, onScanError]);
 
   useEffect(() => {
     Html5Qrcode.getCameras()
@@ -161,21 +166,39 @@ const QRScanner: React.FC<QRScannerProps> = ({
   }, [onScanError]);
 
   useEffect(() => {
-    if (isActive && !isScanning) {
+    if (isActive && !isScanning && cameraId) {
       startScanner();
     } else if (!isActive && isScanning) {
       stopScanner();
     }
+  }, [isActive, isScanning, cameraId, startScanner, stopScanner]);
 
+  // Handle camera changes - restart scanner if camera changes while active
+  useEffect(() => {
+    if (isActive && isScanning && cameraId) {
+      // Camera changed, restart scanner with new camera
+      startScanner();
+    }
+  }, [cameraId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Separate cleanup effect to run only on unmount
+  useEffect(() => {
     return () => {
+      // Cleanup when component unmounts
       if (scannerRef.current) {
-        stopScanner();
+        scannerRef.current.stop()
+          .then(() => scannerRef.current?.clear())
+          .catch((err) => console.warn("Cleanup error:", err))
+          .finally(() => {
+            scannerRef.current = null;
+          });
       }
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
+        processingTimeoutRef.current = null;
       }
     };
-  }, [isActive, isScanning, startScanner, stopScanner]);
+  }, []); // Empty deps = runs only on mount/unmount
 
   const manualRestart = () => {
     if (processingTimeoutRef.current) {
