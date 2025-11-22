@@ -34,124 +34,127 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [networkError, setNetworkError] = useState(false);
 
-  const searchStudents = useCallback(async (query: string) => {
-    if (!query || query.length < 2) return;
+  const searchStudents = useCallback(
+    async (query: string) => {
+      if (!query || query.length < 2) return;
 
-    setIsSearching(true);
-    setNetworkError(false);
-    try {
-      console.log("Searching for students with query:", query);
-      console.log("Encoded query:", encodeURIComponent(query));
+      setIsSearching(true);
+      setNetworkError(false);
+      try {
+        console.log("Searching for students with query:", query);
+        console.log("Encoded query:", encodeURIComponent(query));
 
-      // Check authentication status
-      const token = localStorage.getItem("token");
-      const user = localStorage.getItem("user");
-      console.log("Token exists:", !!token);
-      console.log("User exists:", !!user);
-      if (user) {
-        try {
-          const parsedUser = JSON.parse(user);
-          console.log("User role:", parsedUser.role);
-        } catch (e) {
-          console.log("Error parsing user:", e);
+        // Check authentication status
+        const token = localStorage.getItem("token");
+        const user = localStorage.getItem("user");
+        console.log("Token exists:", !!token);
+        console.log("User exists:", !!user);
+        if (user) {
+          try {
+            const parsedUser = JSON.parse(user);
+            console.log("User role:", parsedUser.role);
+          } catch (e) {
+            console.log("Error parsing user:", e);
+          }
         }
-      }
 
-      const response = await api.get(
-        `/students?search=${encodeURIComponent(query)}`
-      );
+        const response = await api.get(
+          `/students?search=${encodeURIComponent(query)}`
+        );
 
-      console.log("Search response status:", response.status);
-      console.log("Search response data:", response.data);
-      console.log("Response data type:", typeof response.data);
-      console.log("Is response data an array?", Array.isArray(response.data));
+        console.log("Search response status:", response.status);
+        console.log("Search response data:", response.data);
+        console.log("Response data type:", typeof response.data);
+        console.log("Is response data an array?", Array.isArray(response.data));
 
-      // Handle different response formats
-      let students = [];
-      if (Array.isArray(response.data)) {
-        students = response.data;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        students = response.data.data;
-      } else if (response.data && response.data.students) {
-        students = response.data.students;
-      } else {
-        console.warn("Unexpected response format:", response.data);
-        students = [];
-      }
-
-      console.log("Processed students array:", students);
-      console.log("Number of students found:", students.length);
-
-      // Filter out specific test/dummy students that shouldn't appear in search
-      const excludedStudentIds = [
-        "2025-1405", // Medina, Charlize Althea A.
-        "2024-2809", // Gallarde, Christine
-      ];
-
-      students = students.filter((student: Student) => {
-        // Filter by student ID (more reliable than name)
-        if (excludedStudentIds.includes(student.studentId)) {
-          console.log(
-            "Filtering out student:",
-            student.studentId,
-            "-",
-            student.firstName && student.lastName
-              ? `${student.lastName}, ${student.firstName}`
-              : (student as any).studentName || "Unknown"
-          );
-          return false;
+        // Handle different response formats
+        let students = [];
+        if (Array.isArray(response.data)) {
+          students = response.data;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          students = response.data.data;
+        } else if (response.data && response.data.students) {
+          students = response.data.students;
+        } else {
+          console.warn("Unexpected response format:", response.data);
+          students = [];
         }
-        return true;
-      });
 
-      // Limit to top 5 results for better UX
-      setSearchResults(students.slice(0, 5));
-      setShowDropdown(students.length > 0);
-    } catch (error: any) {
-      console.error("Error searching students:", error);
-      console.error("Error response:", error.response);
-      console.error("Error response data:", error.response?.data);
-      console.error("Error response status:", error.response?.status);
-      console.error("Error message:", error.message);
+        console.log("Processed students array:", students);
+        console.log("Number of students found:", students.length);
 
-      let errorMessage = "Failed to search students";
-      let isNetworkIssue = false;
+        // Filter out specific test/dummy students that shouldn't appear in search
+        const excludedStudentIds = [
+          "2025-1405", // Medina, Charlize Althea A.
+          "2024-2809", // Gallarde, Christine
+        ];
 
-      // Check if it's a network error
-      if (
-        !error.response &&
-        (error.message === "Network Error" || error.code === "ERR_NETWORK")
-      ) {
-        errorMessage =
-          "Network error: Please check your internet connection and try again.";
-        isNetworkIssue = true;
-        setNetworkError(true);
-      } else if (error.response?.status === 401) {
-        errorMessage = "Authentication required. Please log in again.";
-      } else if (error.response?.status === 403) {
-        errorMessage = "Insufficient permissions to search students.";
-      } else if (error.response?.status === 404) {
-        errorMessage =
-          "Students endpoint not found. Please check the API configuration.";
-      } else if (error.response?.status === 500) {
-        errorMessage =
-          "Server error while searching students. Please try again.";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
+        students = students.filter((student: Student) => {
+          // Filter by student ID (more reliable than name)
+          if (excludedStudentIds.includes(student.studentId)) {
+            console.log(
+              "Filtering out student:",
+              student.studentId,
+              "-",
+              student.firstName && student.lastName
+                ? `${student.lastName}, ${student.firstName}`
+                : (student as any).studentName || "Unknown"
+            );
+            return false;
+          }
+          return true;
+        });
+
+        // Limit to top 5 results for better UX
+        setSearchResults(students.slice(0, 5));
+        setShowDropdown(students.length > 0);
+      } catch (error: any) {
+        console.error("Error searching students:", error);
+        console.error("Error response:", error.response);
+        console.error("Error response data:", error.response?.data);
+        console.error("Error response status:", error.response?.status);
+        console.error("Error message:", error.message);
+
+        let errorMessage = "Failed to search students";
+        let isNetworkIssue = false;
+
+        // Check if it's a network error
+        if (
+          !error.response &&
+          (error.message === "Network Error" || error.code === "ERR_NETWORK")
+        ) {
+          errorMessage =
+            "Network error: Please check your internet connection and try again.";
+          isNetworkIssue = true;
+          setNetworkError(true);
+        } else if (error.response?.status === 401) {
+          errorMessage = "Authentication required. Please log in again.";
+        } else if (error.response?.status === 403) {
+          errorMessage = "Insufficient permissions to search students.";
+        } else if (error.response?.status === 404) {
+          errorMessage =
+            "Students endpoint not found. Please check the API configuration.";
+        } else if (error.response?.status === 500) {
+          errorMessage =
+            "Server error while searching students. Please try again.";
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        console.log("Final error message:", errorMessage);
+        console.log("Is network issue:", isNetworkIssue);
+
+        onError(errorMessage);
+        setSearchResults([]);
+        setShowDropdown(false);
+      } finally {
+        setIsSearching(false);
       }
-
-      console.log("Final error message:", errorMessage);
-      console.log("Is network issue:", isNetworkIssue);
-
-      onError(errorMessage);
-      setSearchResults([]);
-      setShowDropdown(false);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [onError]);
+    },
+    [onError]
+  );
 
   // Debounced search
   useEffect(() => {
@@ -232,7 +235,12 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       setSearchResults([]);
       setShowDropdown(false);
     } catch (error: any) {
-      console.error("Error marking attendance:", error);
+      console.error("=== Error marking attendance ===");
+      console.error("Full error object:", error);
+      console.error("Error response:", error.response);
+      console.error("Error response data:", error.response?.data);
+      console.error("Error message:", error.message);
+      console.error("Error code:", error.code);
 
       // Check if this is a network error
       if (
@@ -246,10 +254,32 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
         return;
       }
 
-      // Check if this is an "already signed in" error
-      const errorMessage = error.response?.data?.message || "";
-      const errorData = error.response?.data;
+      // Enhanced error message extraction
+      let errorMessage = "";
+      let errorData = null;
 
+      if (error.response?.data) {
+        errorData = error.response.data;
+        // Try multiple ways to get the error message
+        errorMessage =
+          errorData.message ||
+          errorData.error ||
+          (typeof errorData === "string" ? errorData : "");
+      }
+
+      // Fallback to error.message if no response message
+      if (!errorMessage && error.message) {
+        errorMessage = error.message;
+      }
+
+      // Final fallback
+      if (!errorMessage) {
+        errorMessage = "Failed to mark attendance. Please try again.";
+      }
+
+      console.log("Extracted error message:", errorMessage);
+
+      // Check if this is an "already signed in" error
       if (
         errorMessage.includes("already signed in") &&
         errorData?.student &&
@@ -264,9 +294,7 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
         });
       } else {
         // Show regular error with better context
-        const displayError =
-          errorMessage || "Failed to mark attendance. Please try again.";
-        onError(displayError);
+        onError(errorMessage);
       }
     } finally {
       setIsMarkingAttendance(false);
