@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { authService } from "../services/auth.service";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import CCSLogo from "../CCS_FINAL_LOGO.png";
 
@@ -9,13 +10,46 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [rateLimitWarning, setRateLimitWarning] = useState<string>("");
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Check for rate limiting on component mount and periodically
+  useEffect(() => {
+    const checkRateLimit = () => {
+      const { limited, remainingTime } = authService.isRateLimited();
+      if (limited && remainingTime) {
+        const minutes = Math.ceil(remainingTime / 60);
+        setRateLimitWarning(
+          `⏱️ Rate limit active. Please wait ${minutes} minute${minutes > 1 ? 's' : ''} before trying again.`
+        );
+      } else {
+        setRateLimitWarning("");
+      }
+    };
+
+    checkRateLimit();
+    // Check every 10 seconds to update countdown
+    const interval = setInterval(checkRateLimit, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Check rate limit before attempting login
+    const { limited, remainingTime } = authService.isRateLimited();
+    if (limited && remainingTime) {
+      const minutes = Math.ceil(remainingTime / 60);
+      setError(
+        `Too many login attempts. Please wait ${minutes} minute${minutes > 1 ? 's' : ''} before trying again.`
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -93,6 +127,27 @@ const Login: React.FC = () => {
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
+              {rateLimitWarning && (
+                <div className="glass-card p-4 bg-yellow-50 border-yellow-200 animate-fade-in">
+                  <div className="flex items-center space-x-2">
+                    <svg
+                      className="w-5 h-5 text-yellow-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="text-yellow-700 text-sm">{rateLimitWarning}</span>
+                  </div>
+                </div>
+              )}
+
               {error && (
                 <div className="glass-card p-4 bg-red-50 border-red-200 animate-fade-in">
                   <div className="flex items-center space-x-2">
@@ -153,7 +208,7 @@ const Login: React.FC = () => {
               <div>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !!rateLimitWarning}
                   className="btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
@@ -161,6 +216,8 @@ const Login: React.FC = () => {
                       <LoadingSpinner size="sm" text="" />
                       <span>Signing in...</span>
                     </div>
+                  ) : rateLimitWarning ? (
+                    "Rate Limited - Please Wait"
                   ) : (
                     "Sign in"
                   )}
