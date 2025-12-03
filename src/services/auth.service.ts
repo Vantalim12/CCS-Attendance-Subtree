@@ -64,9 +64,6 @@ class AuthService {
       localStorage.setItem("token", authData.token);
       localStorage.setItem("user", JSON.stringify(authData.user));
 
-      // Clear rate limit info on successful login
-      localStorage.removeItem("rateLimitExpiry");
-
       // Dispatch custom event to notify other components
       window.dispatchEvent(new Event("auth-change"));
 
@@ -76,19 +73,6 @@ class AuthService {
         "Login error details:",
         error.response?.data || error.message
       ); // Debug log
-
-      // Handle rate limiting (429 status)
-      if (error.response?.status === 429) {
-        const retryAfter = error.response?.data?.retryAfter || 900; // Default 15 minutes
-        const expiry = Date.now() + (retryAfter * 1000);
-        localStorage.setItem("rateLimitExpiry", expiry.toString());
-        
-        const minutes = Math.ceil(retryAfter / 60);
-        throw new Error(
-          `Too many login attempts. Please try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`
-        );
-      }
-
       throw new Error(error.response?.data?.message || "Login failed");
     }
   }
@@ -153,28 +137,6 @@ class AuthService {
   hasRole(role: "admin" | "student"): boolean {
     const user = this.getCurrentUser();
     return user?.role === role;
-  }
-
-  isRateLimited(): { limited: boolean; remainingTime?: number } {
-    const expiry = localStorage.getItem("rateLimitExpiry");
-    if (!expiry) return { limited: false };
-
-    const expiryTime = parseInt(expiry);
-    const now = Date.now();
-
-    if (now < expiryTime) {
-      const remainingSeconds = Math.ceil((expiryTime - now) / 1000);
-      return { limited: true, remainingTime: remainingSeconds };
-    }
-
-    // Rate limit expired, clear it
-    localStorage.removeItem("rateLimitExpiry");
-    return { limited: false };
-  }
-
-  clearRateLimit(): void {
-    localStorage.removeItem("rateLimitExpiry");
-    console.log("Rate limit cleared successfully");
   }
 }
 

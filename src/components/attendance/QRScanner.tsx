@@ -31,11 +31,11 @@ const QRScanner: React.FC<QRScannerProps> = ({
   const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
       try {
-        // First stop the scanner if it's running
+        // Check if scanner is running before stopping
         if (scannerRef.current.isScanning) {
           await scannerRef.current.stop();
         }
-        // Then clear it
+        // Clear the scanner instance
         await scannerRef.current.clear();
       } catch (error) {
         console.warn("Error stopping scanner:", error);
@@ -54,6 +54,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
   }, []);
 
   const startScanner = useCallback(async () => {
+    // Stop any existing scanner first
     if (scannerRef.current) {
       await stopScanner();
     }
@@ -86,8 +87,8 @@ const QRScanner: React.FC<QRScannerProps> = ({
         (decodedText: string) => {
           const now = Date.now();
 
-          // Use ref to check processing state to avoid closure issues
           if (
+            isProcessing ||
             (lastScanRef.current === decodedText &&
               now - lastScanTimeRef.current < restartDelay)
           ) {
@@ -112,11 +113,13 @@ const QRScanner: React.FC<QRScannerProps> = ({
           }
         },
         (errorMessage: string) => {
-          // Ignore common "no QR code found" errors - these are normal
+          // Ignore common "no QR code found" errors and canvas errors - these are normal
           if (
             errorMessage.includes("NotFoundException") ||
             errorMessage.includes("No MultiFormat Readers") ||
-            errorMessage.includes("No barcode detected")
+            errorMessage.includes("No barcode detected") ||
+            errorMessage.includes("IndexSizeError") ||
+            errorMessage.includes("source width is 0")
           ) {
             return;
           }
@@ -141,8 +144,9 @@ const QRScanner: React.FC<QRScannerProps> = ({
     } catch (error) {
       console.error("Error starting scanner:", error);
       onScanError?.(error instanceof Error ? error.message : String(error));
+      scannerRef.current = null;
     }
-  }, [cameraId, onScanSuccess, autoRestart, restartDelay, stopScanner, onScanError]);
+  }, [cameraId, onScanSuccess, autoRestart, restartDelay, stopScanner, onScanError, isProcessing]);
 
   useEffect(() => {
     Html5Qrcode.getCameras()
@@ -166,39 +170,39 @@ const QRScanner: React.FC<QRScannerProps> = ({
   }, [onScanError]);
 
   useEffect(() => {
-    if (isActive && !isScanning && cameraId) {
-      startScanner();
-    } else if (!isActive && isScanning) {
-      stopScanner();
-    }
-  }, [isActive, isScanning, cameraId, startScanner, stopScanner]);
+    let mounted = true;
 
-  // Handle camera changes - restart scanner if camera changes while active
-  useEffect(() => {
-    if (isActive && isScanning && cameraId) {
-      // Camera changed, restart scanner with new camera
-      startScanner();
-    }
-  }, [cameraId]); // eslint-disable-line react-hooks/exhaustive-deps
+    const initScanner = async () => {
+      if (isActive && !isScanning && mounted && cameraId) {
+        await startScanner();
+      } else if (!isActive && isScanning && mounted) {
+        await stopScanner();
+      }
+    };
 
-  // Separate cleanup effect to run only on unmount
-  useEffect(() => {
+    initScanner();
+
     return () => {
-      // Cleanup when component unmounts
+      mounted = false;
+      // Cleanup on unmount
       if (scannerRef.current) {
-        scannerRef.current.stop()
-          .then(() => scannerRef.current?.clear())
-          .catch((err) => console.warn("Cleanup error:", err))
-          .finally(() => {
-            scannerRef.current = null;
-          });
+        const cleanup = async () => {
+          try {
+            if (scannerRef.current?.isScanning) {
+              await scannerRef.current.stop();
+            }
+            await scannerRef.current?.clear();
+          } catch (error) {
+            // Ignore errors during cleanup
+          }
+        };
+        cleanup();
       }
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
-        processingTimeoutRef.current = null;
       }
     };
-  }, []); // Empty deps = runs only on mount/unmount
+  }, [isActive, cameraId]);
 
   const manualRestart = () => {
     if (processingTimeoutRef.current) {
@@ -224,7 +228,15 @@ const QRScanner: React.FC<QRScannerProps> = ({
               <select
                 className="form-select block w-full mt-1"
                 value={cameraId}
-                onChange={(e) => setCameraId(e.target.value)}
+                onChange={async (e) => {
+                  const newCameraId = e.target.value;
+                  // Stop current scanner before changing camera
+                  if (isScanning) {
+                    await stopScanner();
+                  }
+                  setCameraId(newCameraId);
+                }}
+                disabled={isProcessing}
               >
                 {cameras.map((camera) => (
                   <option key={camera.id} value={camera.id}>
