@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import Events from "./pages/Events";
 import Attendance from "./pages/Attendance";
+import StudentAttendance from "./pages/StudentAttendance";
 import Reports from "./pages/Reports";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 import "./App.css";
@@ -65,6 +66,7 @@ function App() {
             <Route path="students" element={<Students />} />
             <Route path="events" element={<Events />} />
             <Route path="attendance" element={<Attendance />} />
+            <Route path="my-attendance" element={<StudentAttendance />} />
             <Route path="reports" element={<Reports />} />
           </Route>
 

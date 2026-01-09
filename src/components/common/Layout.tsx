@@ -244,6 +244,13 @@ const Layout: React.FC = () => {
       adminOnly: true,
     },
     {
+      name: "My Attendance",
+      href: "/my-attendance",
+      icon: "attendance",
+      current: location.pathname === "/my-attendance",
+      studentOnly: true,
+    },
+    {
       name: "Events",
       href: "/events",
       icon: "events",
@@ -265,7 +272,9 @@ const Layout: React.FC = () => {
   ];
 
   const filteredNavigation = navigation.filter(
-    (item) => !item.adminOnly || hasRole("admin")
+    (item) =>
+      (!item.adminOnly || hasRole("admin")) &&
+      (!item.studentOnly || hasRole("student"))
   );
 
   // Handle clicks outside sidebar when expanded but not pinned
@@ -318,9 +327,8 @@ const Layout: React.FC = () => {
       {/* Sidebar */}
       <div
         ref={sidebarRef}
-        className={`fixed inset-y-0 left-0 z-50 glass-card-lg transition-all duration-300 ease-out ${
-          isSidebarExpanded ? "sidebar-expanded" : "sidebar-collapsed"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 glass-card-lg transition-all duration-300 ease-out ${isSidebarExpanded ? "sidebar-expanded" : "sidebar-collapsed"
+          }`}
         onMouseEnter={handleSidebarHover}
         onMouseLeave={handleSidebarLeave}
       >
@@ -350,9 +358,8 @@ const Layout: React.FC = () => {
               </h1>
               <button
                 onClick={togglePin}
-                className={`p-1.5 rounded-md transition-colors duration-200 ${
-                  isPinned ? "text-primary" : "text-ink-muted"
-                }`}
+                className={`p-1.5 rounded-md transition-colors duration-200 ${isPinned ? "text-primary" : "text-ink-muted"
+                  }`}
                 style={
                   isPinned ? { background: "rgba(64, 211, 200, 0.2)" } : {}
                 }
@@ -441,9 +448,8 @@ const Layout: React.FC = () => {
 
       {/* Main content area */}
       <div
-        className={`transition-all duration-300 ease-out ${
-          isSidebarExpanded ? "ml-[280px]" : "ml-[72px]"
-        }`}
+        className={`transition-all duration-300 ease-out ${isSidebarExpanded ? "ml-[280px]" : "ml-[72px]"
+          }`}
       >
         {/* Top bar */}
         <header
