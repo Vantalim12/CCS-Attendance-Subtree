@@ -8,6 +8,7 @@ import {
 import { useAuth } from "./hooks/useAuth";
 import Layout from "./components/common/Layout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import IdleTimeoutWrapper from "./components/common/IdleTimeoutWrapper";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -52,12 +53,14 @@ function App() {
             }
           />
 
-          {/* Protected routes */}
+          {/* Protected routes with idle timeout */}
           <Route
             path="/"
             element={
               <ProtectedRoute>
-                <Layout />
+                <IdleTimeoutWrapper>
+                  <Layout />
+                </IdleTimeoutWrapper>
               </ProtectedRoute>
             }
           >
@@ -87,3 +90,4 @@ function App() {
 }
 
 export default App;
+

@@ -1,57 +1,111 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../services/auth.service";
+import AnalyticsCharts from "../components/dashboard/AnalyticsCharts";
+
+interface Activity {
+  id: string;
+  type: "attendance" | "event" | "excuse";
+  message: string;
+  timestamp: string;
+}
 
 const Dashboard: React.FC = () => {
-  const { user, hasRole } = useAuth();
+  const { hasRole } = useAuth();
   const [stats, setStats] = useState({
     totalStudents: 0,
     activeEvents: 0,
     todayAttendance: "0%",
     pendingExcuses: 0,
   });
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  const fetchStats = useCallback(async () => {
+    if (hasRole("admin")) {
+      try {
+        const response = await api.get("/dashboard/stats");
+        setStats(response.data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+      }
+    }
+  }, [hasRole]);
+
+  const fetchActivities = useCallback(async () => {
+    if (hasRole("admin")) {
+      try {
+        const response = await api.get("/dashboard/activities");
+        setActivities(response.data.activities || []);
+        setLastUpdated(new Date());
+      } catch (error) {
+        console.error("Failed to fetch activities:", error);
+      }
+    }
+  }, [hasRole]);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      if (hasRole("admin")) {
-        try {
-          const response = await api.get("/dashboard/stats");
-          setStats(response.data);
-        } catch (error) {
-          console.error("Failed to fetch dashboard stats:", error);
-        }
-      }
-    };
-
     fetchStats();
-  }, [hasRole]);
+    fetchActivities();
+
+    // Auto-refresh activities every 30 seconds
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchActivities();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchStats, fetchActivities]);
+
+  const formatTimeAgo = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  };
+
+  const getActivityColor = (type: Activity["type"]) => {
+    switch (type) {
+      case "attendance":
+        return "bg-blue-400 ring-blue-50";
+      case "event":
+        return "bg-emerald-400 ring-emerald-50";
+      case "excuse":
+        return "bg-amber-400 ring-amber-50";
+      default:
+        return "bg-gray-400 ring-gray-50";
+    }
+  };
 
   const statsData = [
     {
       name: "Total Students",
       value: stats.totalStudents,
-      icon: "👥",
       description: "Registered students",
       adminOnly: true,
     },
     {
       name: "Active Events",
       value: stats.activeEvents,
-      icon: "📅",
       description: "Ongoing events",
       adminOnly: false,
     },
     {
       name: "Today's Attendance",
       value: stats.todayAttendance,
-      icon: "✅",
       description: "Attendance rate",
       adminOnly: false,
     },
     {
       name: "Pending Excuses",
       value: stats.pendingExcuses,
-      icon: "📝",
       description: "Letters to review",
       adminOnly: true,
     },
@@ -67,28 +121,24 @@ const Dashboard: React.FC = () => {
         title: "Manage Students",
         description: "Add, edit, or import student data",
         href: "/students",
-        icon: "👥",
         color: "bg-blue-500",
       },
       {
         title: "Create Event",
         description: "Set up new attendance events",
         href: "/events",
-        icon: "📅",
         color: "bg-green-500",
       },
       {
         title: "View Reports",
         description: "Generate attendance reports",
         href: "/reports",
-        icon: "📊",
         color: "bg-purple-500",
       },
       {
         title: "Manage Attendance",
         description: "Monitor real-time attendance",
         href: "/attendance",
-        icon: "✅",
         color: "bg-orange-500",
       },
     ]
@@ -97,21 +147,18 @@ const Dashboard: React.FC = () => {
         title: "Scan QR Code",
         description: "Mark your attendance",
         href: "/attendance",
-        icon: "📱",
         color: "bg-blue-500",
       },
       {
         title: "View Events",
         description: "See upcoming events",
         href: "/events",
-        icon: "📅",
         color: "bg-green-500",
       },
       {
         title: "Submit Excuse",
         description: "Upload excuse letters",
         href: "/attendance",
-        icon: "📝",
         color: "bg-orange-500",
       },
     ];
@@ -175,14 +222,24 @@ const Dashboard: React.FC = () => {
                       : "bg-amber-50 text-amber-600"
                   }`}
               >
-                <span className="text-2xl">{stat.icon}</span>
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {index === 0 && (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  )}
+                  {index === 1 && (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  )}
+                  {index === 2 && (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  )}
+                  {index === 3 && (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  )}
+                </svg>
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm text-ink-muted/80">
-              <span className="text-emerald-600 font-medium flex items-center mr-2">
-                ↑ 12%
-              </span>
-              <span>vs last month</span>
+            <div className="mt-4 text-sm text-ink-muted/80">
+              <span>{stat.description}</span>
             </div>
           </div>
         ))}
@@ -204,9 +261,25 @@ const Dashboard: React.FC = () => {
             >
               <div className="bg-white/50 p-6 rounded-xl h-full transition-colors group-hover:bg-white/80">
                 <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg mb-4 transition-transform group-hover:scale-110 duration-300 ${action.color}`}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg mb-4 transition-transform group-hover:scale-110 duration-300 ${action.color}`}
                 >
-                  {action.icon}
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {action.title === "Manage Students" && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    )}
+                    {(action.title === "Create Event" || action.title === "View Events") && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    )}
+                    {action.title === "View Reports" && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    )}
+                    {(action.title === "Manage Attendance" || action.title === "Scan QR Code") && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    )}
+                    {action.title === "Submit Excuse" && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    )}
+                  </svg>
                 </div>
                 <h3 className="text-lg font-bold text-ink mb-1 group-hover:text-primary transition-colors">
                   {action.title}
@@ -225,47 +298,56 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="glass-card p-0 overflow-hidden">
-        <div className="px-8 py-6 border-b border-gray-100/50 bg-white/30">
-          <h3 className="text-lg font-bold text-ink flex items-center">
-            Recent Activity
+      {/* Analytics Charts - Admin Only */}
+      {hasRole("admin") && (
+        <div>
+          <h3 className="text-xl font-display font-bold text-ink mb-6 flex items-center">
+            <span className="w-1 h-6 bg-primary rounded-full mr-3"></span>
+            Analytics
           </h3>
+          <AnalyticsCharts />
         </div>
-        <div className="p-8 space-y-6">
-          <div className="flex gap-4">
-            <div className="flex flex-col items-center">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 ring-4 ring-emerald-50"></div>
-              <div className="w-0.5 h-full bg-gray-100 mt-2"></div>
-            </div>
-            <div className="pb-6">
-              <p className="text-ink font-medium">Event "Weekly Meeting" created</p>
-              <p className="text-sm text-ink-muted mt-1">2 hours ago</p>
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <div className="flex flex-col items-center">
-              <div className="w-2 h-2 rounded-full bg-blue-400 ring-4 ring-blue-50"></div>
-              <div className="w-0.5 h-full bg-gray-100 mt-2"></div>
-            </div>
-            <div className="pb-6">
-              <p className="text-ink font-medium">45 students marked attendance</p>
-              <p className="text-sm text-ink-muted mt-1">4 hours ago</p>
+      )}
+
+      {/* Recent Activity - Real-time */}
+      {hasRole("admin") && (
+        <div className="glass-card p-0 overflow-hidden">
+          <div className="px-8 py-6 border-b border-gray-100/50 bg-white/30 flex justify-between items-center">
+            <h3 className="text-lg font-bold text-ink flex items-center">
+              Recent Activity
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-ink-muted">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>Updated {lastUpdated.toLocaleTimeString()}</span>
             </div>
           </div>
-          <div className="flex gap-4">
-            <div className="flex flex-col items-center">
-              <div className="w-2 h-2 rounded-full bg-amber-400 ring-4 ring-amber-50"></div>
-            </div>
-            <div>
-              <p className="text-ink font-medium">New excuse letter submitted</p>
-              <p className="text-sm text-ink-muted mt-1">6 hours ago</p>
-            </div>
+          <div className="p-8 space-y-6">
+            {activities.length === 0 ? (
+              <div className="text-center py-4 text-ink-muted">
+                No recent activities
+              </div>
+            ) : (
+              activities.map((activity, index) => (
+                <div key={activity.id} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className={`w-2 h-2 rounded-full ring-4 ${getActivityColor(activity.type)}`}></div>
+                    {index < activities.length - 1 && (
+                      <div className="w-0.5 h-full bg-gray-100 mt-2"></div>
+                    )}
+                  </div>
+                  <div className={index < activities.length - 1 ? "pb-6" : ""}>
+                    <p className="text-ink font-medium">{activity.message}</p>
+                    <p className="text-sm text-ink-muted mt-1">{formatTimeAgo(activity.timestamp)}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
 export default Dashboard;
+

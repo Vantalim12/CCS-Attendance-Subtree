@@ -23,6 +23,8 @@ const QRScanner: React.FC<QRScannerProps> = ({
   const lastScanRef = useRef<string>("");
   const lastScanTimeRef = useRef<number>(0);
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Track the last fully processed QR code - only reset on manual restart or different QR
+  const lastProcessedQrRef = useRef<string>("");
   const [cameraId, setCameraId] = useState<string>("");
   const [cameras, setCameras] = useState<Array<{ id: string; label: string }>>(
     []
@@ -85,18 +87,23 @@ const QRScanner: React.FC<QRScannerProps> = ({
           },
         },
         (decodedText: string) => {
-          const now = Date.now();
-
-          if (
-            isProcessing ||
-            (lastScanRef.current === decodedText &&
-              now - lastScanTimeRef.current < restartDelay)
-          ) {
+          // Skip if currently processing
+          if (isProcessing) {
             return;
           }
 
+          // Skip if this is the same QR code that was already processed
+          // Only allow re-scanning if:
+          // 1. This is a different QR code than the last processed one, OR
+          // 2. Manual restart was triggered (which clears lastProcessedQrRef)
+          if (lastProcessedQrRef.current === decodedText) {
+            return;
+          }
+
+          // This is either a new QR code or manual restart was triggered
           lastScanRef.current = decodedText;
-          lastScanTimeRef.current = now;
+          lastScanTimeRef.current = Date.now();
+          lastProcessedQrRef.current = decodedText; // Mark this QR as processed
           setIsProcessing(true);
           setScanMessage(
             "QR Code scanned successfully! Ready for next scan..."
@@ -107,6 +114,8 @@ const QRScanner: React.FC<QRScannerProps> = ({
             processingTimeoutRef.current = setTimeout(() => {
               setIsProcessing(false);
               setScanMessage("");
+              // Note: We do NOT clear lastProcessedQrRef here
+              // This prevents re-scanning the same QR until a different one is scanned
             }, restartDelay);
           } else {
             stopScanner();
@@ -213,6 +222,8 @@ const QRScanner: React.FC<QRScannerProps> = ({
     setScanMessage("");
     lastScanRef.current = "";
     lastScanTimeRef.current = 0;
+    // Clear the last processed QR to allow re-scanning the same code
+    lastProcessedQrRef.current = "";
 
     if (!isScanning) {
       startScanner();

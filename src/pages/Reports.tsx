@@ -143,21 +143,21 @@ const Reports: React.FC = () => {
             <button
               onClick={() => setActiveTab("reports")}
               className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === "reports"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
             >
-              📊 Attendance Reports
+              Attendance Reports
             </button>
             {isAdmin && (
               <button
                 onClick={() => setActiveTab("exclusions")}
                 className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === "exclusions"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
               >
-                👥 Officer Exclusions
+                Officer Exclusions
               </button>
             )}
           </nav>
@@ -172,7 +172,7 @@ const Reports: React.FC = () => {
       {!isAdmin && (
         <div className="glass-card bg-blue-50/50 p-6">
           <h3 className="text-lg font-medium text-blue-900 mb-2">
-            📊 Reports Available
+            Reports Available
           </h3>
           <div className="text-blue-800 space-y-2">
             <p>
@@ -181,35 +181,6 @@ const Reports: React.FC = () => {
             <p>• Search by date range, event, or student information</p>
             <p>• Real-time attendance statistics and trends</p>
             <p>• Export capabilities for personal record keeping</p>
-          </div>
-        </div>
-      )}
-
-      {/* Admin Feature Overview */}
-      {isAdmin && (
-        <div className="glass-card bg-green-50/50 p-6">
-          <h3 className="text-lg font-medium text-green-900 mb-2">
-            🛠️ Admin Reporting Features
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-green-800">
-            <div>
-              <h4 className="font-medium mb-2">📈 Advanced Analytics</h4>
-              <ul className="space-y-1 text-sm">
-                <li>• Attendance trends and patterns</li>
-                <li>• Morning vs afternoon session analysis</li>
-                <li>• Student performance tracking</li>
-                <li>• Event-specific attendance rates</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">⚙️ Management Tools</h4>
-              <ul className="space-y-1 text-sm">
-                <li>• Officer exclusion management</li>
-                <li>• Bulk export capabilities</li>
-                <li>• Custom date range filtering</li>
-                <li>• Multi-format export (Excel/PDF)</li>
-              </ul>
-            </div>
           </div>
         </div>
       )}

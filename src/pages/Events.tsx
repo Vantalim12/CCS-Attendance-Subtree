@@ -271,32 +271,32 @@ const Events: React.FC = () => {
               <button
                 onClick={() => setActiveTab("list")}
                 className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === "list"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
               >
-                📋 Event List
+                Event List
               </button>
               {isAdmin && (
                 <button
                   onClick={() => setActiveTab("form")}
                   className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === "form"
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                 >
-                  ✏️ {editingEvent ? "Edit Event" : "Create Event"}
+                  {editingEvent ? "Edit Event" : "Create Event"}
                 </button>
               )}
               {selectedEvent && (
                 <button
                   onClick={() => setActiveTab("attendance")}
                   className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === "attendance"
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                 >
-                  📊 Attendance Tracking
+                  Attendance Tracking
                 </button>
               )}
             </nav>
@@ -311,7 +311,7 @@ const Events: React.FC = () => {
       {activeTab === "list" && !isAdmin && (
         <div className="glass-card bg-blue-50/50 p-6">
           <h3 className="text-lg font-medium text-blue-900 mb-2">
-            📚 How to Use Events
+            How to Use Events
           </h3>
           <div className="text-blue-800 space-y-2">
             <p>• Click on any event to view detailed attendance information</p>
@@ -323,24 +323,9 @@ const Events: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Admin Help Section - Only show on list view for admins */}
-      {activeTab === "list" && isAdmin && (
-        <div className="glass-card bg-green-50/50 p-6">
-          <h3 className="text-lg font-medium text-green-900 mb-2">
-            🛠️ Admin Tools
-          </h3>
-          <div className="text-green-800 space-y-2">
-            <p>• Create new events with custom attendance requirements</p>
-            <p>• Configure attendance time windows and grace periods</p>
-            <p>• Track real-time attendance for ongoing events</p>
-            <p>• Export attendance data for reporting</p>
-            <p>• Manually mark attendance when needed</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
 export default Events;
+
