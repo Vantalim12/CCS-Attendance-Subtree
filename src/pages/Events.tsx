@@ -112,7 +112,7 @@ const Events: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white shadow rounded-lg">
+      <div className="glass-card">
         <div className="px-6 py-4">
           <div className="flex justify-between items-center">
             <div>
@@ -151,7 +151,7 @@ const Events: React.FC = () => {
       {/* Quick Stats - Only show on list view */}
       {activeTab === "list" && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="glass-card p-6 hover:scale-105 transition-transform duration-300">
             <div className="flex items-center">
               <div className="p-3 bg-blue-100 rounded-lg">
                 <svg
@@ -179,7 +179,7 @@ const Events: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="glass-card p-6 hover:scale-105 transition-transform duration-300">
             <div className="flex items-center">
               <div className="p-3 bg-green-100 rounded-lg">
                 <svg
@@ -207,7 +207,7 @@ const Events: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="glass-card p-6 hover:scale-105 transition-transform duration-300">
             <div className="flex items-center">
               <div className="p-3 bg-yellow-100 rounded-lg">
                 <svg
@@ -235,7 +235,7 @@ const Events: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="glass-card p-6 hover:scale-105 transition-transform duration-300">
             <div className="flex items-center">
               <div className="p-3 bg-gray-100 rounded-lg">
                 <svg
@@ -265,27 +265,25 @@ const Events: React.FC = () => {
 
       {/* Navigation Tabs - Only show when relevant */}
       {(activeTab !== "list" || selectedEvent) && (
-        <div className="bg-white shadow rounded-lg">
+        <div className="glass-card">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex">
               <button
                 onClick={() => setActiveTab("list")}
-                className={`py-4 px-6 text-sm font-medium border-b-2 ${
-                  activeTab === "list"
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === "list"
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 📋 Event List
               </button>
               {isAdmin && (
                 <button
                   onClick={() => setActiveTab("form")}
-                  className={`py-4 px-6 text-sm font-medium border-b-2 ${
-                    activeTab === "form"
+                  className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === "form"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   ✏️ {editingEvent ? "Edit Event" : "Create Event"}
                 </button>
@@ -293,11 +291,10 @@ const Events: React.FC = () => {
               {selectedEvent && (
                 <button
                   onClick={() => setActiveTab("attendance")}
-                  className={`py-4 px-6 text-sm font-medium border-b-2 ${
-                    activeTab === "attendance"
+                  className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === "attendance"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   📊 Attendance Tracking
                 </button>
@@ -312,7 +309,7 @@ const Events: React.FC = () => {
 
       {/* Help Section - Only show on list view for students */}
       {activeTab === "list" && !isAdmin && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div className="glass-card bg-blue-50/50 p-6">
           <h3 className="text-lg font-medium text-blue-900 mb-2">
             📚 How to Use Events
           </h3>
@@ -329,7 +326,7 @@ const Events: React.FC = () => {
 
       {/* Admin Help Section - Only show on list view for admins */}
       {activeTab === "list" && isAdmin && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+        <div className="glass-card bg-green-50/50 p-6">
           <h3 className="text-lg font-medium text-green-900 mb-2">
             🛠️ Admin Tools
           </h3>

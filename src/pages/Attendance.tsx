@@ -324,11 +324,10 @@ const Attendance: React.FC = () => {
                   clearMessages();
                   if (tab.id !== "scan") setIsQRActive(false);
                 }}
-                className={`${
-                  activeTab === tab.id
+                className={`${activeTab === tab.id
                     ? "border-primary text-primary"
                     : "border-transparent text-ink-muted"
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors duration-200`}
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors duration-200`}
                 onMouseEnter={(e) => {
                   if (activeTab !== tab.id) {
                     e.currentTarget.style.color = "var(--color-ink)";
@@ -477,7 +476,7 @@ const Attendance: React.FC = () => {
       </div>
 
       {/* Real-time Status */}
-      <div className="bg-white shadow rounded-lg p-4">
+      <div className="glass-card p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>

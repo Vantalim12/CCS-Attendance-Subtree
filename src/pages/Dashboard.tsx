@@ -1,34 +1,56 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { api } from "../services/auth.service";
 
 const Dashboard: React.FC = () => {
   const { user, hasRole } = useAuth();
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    activeEvents: 0,
+    todayAttendance: "0%",
+    pendingExcuses: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (hasRole("admin")) {
+        try {
+          const response = await api.get("/dashboard/stats");
+          setStats(response.data);
+        } catch (error) {
+          console.error("Failed to fetch dashboard stats:", error);
+        }
+      }
+    };
+
+    fetchStats();
+  }, [hasRole]);
 
   const statsData = [
     {
       name: "Total Students",
-      value: "256",
+      value: stats.totalStudents,
       icon: "👥",
       description: "Registered students",
       adminOnly: true,
     },
     {
       name: "Active Events",
-      value: "12",
+      value: stats.activeEvents,
       icon: "📅",
       description: "Ongoing events",
       adminOnly: false,
     },
     {
       name: "Today's Attendance",
-      value: "89%",
+      value: stats.todayAttendance,
       icon: "✅",
       description: "Attendance rate",
       adminOnly: false,
     },
     {
       name: "Pending Excuses",
-      value: "7",
+      value: stats.pendingExcuses,
       icon: "📝",
       description: "Letters to review",
       adminOnly: true,
@@ -145,12 +167,12 @@ const Dashboard: React.FC = () => {
               </div>
               <div
                 className={`p-3 rounded-2xl ${index === 0
-                    ? "bg-blue-50 text-blue-600"
-                    : index === 1
-                      ? "bg-purple-50 text-purple-600"
-                      : index === 2
-                        ? "bg-emerald-50 text-emerald-600"
-                        : "bg-amber-50 text-amber-600"
+                  ? "bg-blue-50 text-blue-600"
+                  : index === 1
+                    ? "bg-purple-50 text-purple-600"
+                    : index === 2
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "bg-amber-50 text-amber-600"
                   }`}
               >
                 <span className="text-2xl">{stat.icon}</span>

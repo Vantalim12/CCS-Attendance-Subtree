@@ -82,7 +82,7 @@ const Students: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -119,7 +119,7 @@ const Students: React.FC = () => {
       )}
 
       {/* Tab Navigation */}
-      <div className="bg-white shadow rounded-lg">
+      <div className="glass-card">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
             {tabs.map((tab) => (
@@ -131,11 +131,10 @@ const Students: React.FC = () => {
                     setEditingStudent(null);
                   }
                 }}
-                className={`${
-                  activeTab === tab.id
+                className={`${activeTab === tab.id
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
@@ -184,7 +183,7 @@ const Students: React.FC = () => {
 
       {/* Quick Actions (Admin Only) */}
       {isAdmin && activeTab === "list" && (
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="glass-card p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Quick Actions
           </h3>
@@ -227,7 +226,7 @@ const Students: React.FC = () => {
             return (
               <div
                 key={status}
-                className="bg-white p-4 rounded-lg shadow border"
+                className="glass-card p-4 hover:shadow-lg transition-all duration-300"
               >
                 <div className="text-sm font-medium text-gray-500 capitalize mb-1">
                   {status.replace("-", " ")}
@@ -242,7 +241,7 @@ const Students: React.FC = () => {
 
       {/* Recent Activity */}
       {students.length > 0 && (
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="glass-card p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Recent Students
           </h3>
@@ -257,7 +256,7 @@ const Students: React.FC = () => {
               .map((student) => (
                 <div
                   key={student._id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                  className="flex items-center justify-between p-3 bg-white/50 rounded-md border border-white/20"
                 >
                   <div>
                     <div className="font-medium text-gray-900">

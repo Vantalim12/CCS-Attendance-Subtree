@@ -29,7 +29,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen hero-gradient">
+    <div className="min-h-screen bg-mesh">
       {/* Header */}
       <header className="relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

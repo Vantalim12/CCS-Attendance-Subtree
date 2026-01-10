@@ -53,21 +53,21 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <div className="min-h-screen bg-mesh flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full glass-card-lg p-8 animate-slide-in">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-display font-bold text-ink mb-2">
             Create Account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="text-ink-muted">
             Join the CCS Attendance System
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-              {error}
+            <div className="glass-card p-4 bg-red-50/50 border-red-200 animate-fade-in text-red-700 text-sm flex items-center">
+              <span className="mr-2">⚠️</span> {error}
             </div>
           )}
 
@@ -158,7 +158,7 @@ const Register: React.FC = () => {
                 onChange={(e) => setOrganizationId(e.target.value)}
                 disabled={isLoading}
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-ink-muted">
                 Contact your admin for the organization ID
               </p>
             </div>
@@ -168,7 +168,7 @@ const Register: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="btn-primary w-full text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <LoadingSpinner size="sm" text="" />
@@ -179,11 +179,11 @@ const Register: React.FC = () => {
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-ink-muted">
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+                className="font-medium text-primary hover:text-primary-600 transition-colors duration-200"
               >
                 Sign in here
               </Link>
