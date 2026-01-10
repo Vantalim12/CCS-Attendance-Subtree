@@ -323,7 +323,7 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-soft">
+    <div className="min-h-screen bg-mesh">
       {/* Sidebar */}
       <div
         ref={sidebarRef}
