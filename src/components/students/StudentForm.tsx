@@ -18,10 +18,8 @@ const StudentForm: React.FC<StudentFormProps> = ({
     studentId: "",
     firstName: "",
     lastName: "",
-    email: "",
     yearLevel: "",
     major: "",
-    departmentProgram: "",
     status: "regular" as
       | "regular"
       | "governor"
@@ -38,10 +36,8 @@ const StudentForm: React.FC<StudentFormProps> = ({
         studentId: student.studentId,
         firstName: student.firstName,
         lastName: student.lastName,
-        email: student.email || "",
         yearLevel: student.yearLevel,
         major: student.major,
-        departmentProgram: student.departmentProgram,
         status: student.status,
       });
     } else {
@@ -49,10 +45,8 @@ const StudentForm: React.FC<StudentFormProps> = ({
         studentId: "",
         firstName: "",
         lastName: "",
-        email: "",
         yearLevel: "",
         major: "",
-        departmentProgram: "",
         status: "regular",
       });
     }
@@ -79,8 +73,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
       !formData.firstName.trim() ||
       !formData.lastName.trim() ||
       !formData.yearLevel ||
-      !formData.major.trim() ||
-      !formData.departmentProgram.trim()
+      !formData.major.trim()
     ) {
       setError("Please fill in all required fields");
       return;
@@ -104,10 +97,8 @@ const StudentForm: React.FC<StudentFormProps> = ({
           studentId: "",
           firstName: "",
           lastName: "",
-          email: "",
           yearLevel: "",
           major: "",
-          departmentProgram: "",
           status: "regular",
         });
       }
@@ -116,7 +107,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     } catch (error: any) {
       setError(
         error.response?.data?.message ||
-          `Failed to ${student ? "update" : "create"} student`
+        `Failed to ${student ? "update" : "create"} student`
       );
     } finally {
       setLoading(false);
@@ -197,23 +188,6 @@ const StudentForm: React.FC<StudentFormProps> = ({
             />
           </div>
 
-          {/* Email */}
-          <div className="md:col-span-2">
-            <label className="label">Email (Gmail for notifications)</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="e.g., student.emil@gmail.com"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Optional. Student will receive attendance confirmations if
-              provided.
-            </p>
-          </div>
-
           {/* Year Level */}
           <div>
             <label className="label">Year Level *</label>
@@ -243,20 +217,6 @@ const StudentForm: React.FC<StudentFormProps> = ({
               onChange={handleChange}
               className="input-field"
               placeholder="e.g., Computer Science"
-              required
-            />
-          </div>
-
-          {/* Department/Program */}
-          <div className="md:col-span-2">
-            <label className="label">Department/Program *</label>
-            <input
-              type="text"
-              name="departmentProgram"
-              value={formData.departmentProgram}
-              onChange={handleChange}
-              className="input-field"
-              placeholder="e.g., Bachelor of Science in Computer Science"
               required
             />
           </div>
@@ -322,23 +282,6 @@ const StudentForm: React.FC<StudentFormProps> = ({
           )}
         </div>
       </form>
-
-      {/* Help Text */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <h4 className="text-sm font-medium text-gray-900 mb-2">Guidelines</h4>
-        <ul className="text-sm text-gray-600 space-y-1">
-          <li>
-            • Student ID should be unique and follow your institution's format
-          </li>
-          <li>• Full name should include first and last name</li>
-          <li>• Email is optional but required for attendance notifications</li>
-          <li>• Select appropriate year level and status</li>
-          <li>• QR code will be automatically generated upon creation</li>
-          {student && (
-            <li>• Changes will be reflected immediately in the system</li>
-          )}
-        </ul>
-      </div>
     </div>
   );
 };

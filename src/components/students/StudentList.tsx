@@ -38,10 +38,7 @@ const StudentList: React.FC<StudentListProps> = ({
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
           student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          student.major.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          student.departmentProgram
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())
+          student.major.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -115,7 +112,6 @@ const StudentList: React.FC<StudentListProps> = ({
       "Last Name",
       "Year Level",
       "Major",
-      "Department/Program",
       "Status",
       "QR Code Data",
       "Created At"
@@ -128,7 +124,6 @@ const StudentList: React.FC<StudentListProps> = ({
       student.lastName,
       student.yearLevel,
       student.major,
-      student.departmentProgram,
       student.status,
       student.qrCodeData,
       new Date(student.createdAt).toLocaleString()
@@ -247,7 +242,7 @@ const StudentList: React.FC<StudentListProps> = ({
             <label className="label">Search Students</label>
             <input
               type="text"
-              placeholder="Search by name, ID, major, or program..."
+              placeholder="Search by name, ID, or major..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-field"
@@ -394,12 +389,6 @@ const StudentList: React.FC<StudentListProps> = ({
                     <span>Major:</span>
                     <span className="font-medium">{student.major}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Program:</span>
-                    <span className="font-medium text-xs">
-                      {student.departmentProgram}
-                    </span>
-                  </div>
                 </div>
 
                 {isAdmin && (
@@ -451,12 +440,6 @@ const StudentList: React.FC<StudentListProps> = ({
             <div>
               <label className="label">Major</label>
               <p className="text-gray-900">{selectedStudent.major}</p>
-            </div>
-            <div className="md:col-span-2">
-              <label className="label">Department/Program</label>
-              <p className="text-gray-900">
-                {selectedStudent.departmentProgram}
-              </p>
             </div>
             <div>
               <label className="label">Status</label>

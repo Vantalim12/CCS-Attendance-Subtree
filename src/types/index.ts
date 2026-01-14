@@ -32,10 +32,8 @@ export interface Student {
   studentId: string;
   firstName: string;
   lastName: string;
-  email: string;
   yearLevel: string;
   major: string;
-  departmentProgram: string;
   status: "regular" | "governor" | "vice-governor" | "under-secretary";
   qrCodeData: string;
   organizationId: string;
@@ -48,7 +46,6 @@ export interface StudentImportData {
   student_name: string;
   year_level: string;
   major: string;
-  department_program: string;
   status: string;
 }
 
@@ -86,7 +83,6 @@ export interface Attendance {
     firstName: string;
     lastName: string;
     studentId: string;
-    email: string;
   };
   event: string;
   morningStatus: "present" | "absent" | "excused";
