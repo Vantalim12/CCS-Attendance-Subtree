@@ -153,17 +153,52 @@ const StudentList: React.FC<StudentListProps> = ({
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
       `students_export_${new Date().toISOString().split("T")[0]}.csv`
     );
     link.style.visibility = "hidden";
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDeleteAllStudents = async () => {
+    if (students.length === 0) {
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ALL ${students.length} students? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    // Double confirmation for safety
+    if (
+      !window.confirm(
+        `This will permanently delete ${students.length} student records. Type confirm to proceed.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.delete("/students/all");
+      await fetchStudents();
+      setSelectedStudent(null);
+      onStudentSelect?.(null);
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to delete all students");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -289,6 +324,16 @@ const StudentList: React.FC<StudentListProps> = ({
             >
               📥 Export to CSV
             </button>
+            {isAdmin && (
+              <button
+                onClick={handleDeleteAllStudents}
+                disabled={students.length === 0}
+                className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Delete all students"
+              >
+                🗑️ Delete All
+              </button>
+            )}
             <button
               onClick={() => {
                 setSearchTerm("");
@@ -322,11 +367,10 @@ const StudentList: React.FC<StudentListProps> = ({
             <div
               key={student._id}
               onClick={() => handleStudentClick(student)}
-              className={`bg-white rounded-lg shadow border-2 transition-all cursor-pointer hover:shadow-md ${
-                selectedStudent?._id === student._id
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
-              }`}
+              className={`bg-white rounded-lg shadow border-2 transition-all cursor-pointer hover:shadow-md ${selectedStudent?._id === student._id
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-200 hover:border-gray-300"
+                }`}
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
