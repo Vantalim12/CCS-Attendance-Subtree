@@ -48,10 +48,9 @@ const Students: React.FC = () => {
       setError("");
       const response = await api.get("/students?limit=100");
 
-      // Handle new paginated response format safely
-      const responseData = response.data;
-      const data = responseData.data || (Array.isArray(responseData) ? responseData : []);
-      const responseStats = responseData.stats || {
+      // Handle both old (array) and new (paginated object) response formats
+      let studentsData: Student[] = [];
+      let statsData = {
         total: 0,
         regular: 0,
         governor: 0,
@@ -59,8 +58,20 @@ const Students: React.FC = () => {
         'under-secretary': 0
       };
 
-      setStudents(Array.isArray(data) ? data : []);
-      setStats(responseStats);
+      if (Array.isArray(response.data)) {
+        // Old format: response.data is directly an array
+        studentsData = response.data;
+        statsData.total = response.data.length;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        // New format: { data: [], meta: {}, stats: {} }
+        studentsData = response.data.data;
+        if (response.data.stats) {
+          statsData = response.data.stats;
+        }
+      }
+
+      setStudents(studentsData);
+      setStats(statsData);
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch students");
     } finally {

@@ -83,19 +83,31 @@ const StudentList: React.FC<StudentListProps> = ({
 
       const response = await api.get(`/students?${params.toString()}`);
 
-      // Handle new paginated response format safely
-      const responseData = response.data;
-      const data = responseData.data || (Array.isArray(responseData) ? responseData : []);
-      const meta = responseData.meta || { total: data.length, totalPages: 1, page: 1, limit: itemsPerPage };
+      // Handle both old (array) and new (paginated object) response formats
+      let studentsData: Student[] = [];
+      let totalCount = 0;
+      let pages = 1;
 
-      setStudents(data);
-      setTotalItems(meta.total);
-      setTotalPages(meta.totalPages);
+      if (Array.isArray(response.data)) {
+        // Old format: response.data is directly an array
+        studentsData = response.data;
+        totalCount = response.data.length;
+        pages = 1;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        // New format: { data: [], meta: {}, stats: {} }
+        studentsData = response.data.data;
+        const meta = response.data.meta || {};
+        totalCount = meta.total || studentsData.length;
+        pages = meta.totalPages || 1;
+      }
+
+      setStudents(studentsData);
+      setTotalItems(totalCount);
+      setTotalPages(pages);
 
       // Update unique filter values from the fetched data
-      // Note: For a complete solution, these should come from a separate endpoint or stats
-      const years = Array.from(new Set(data.map((s: Student) => s.yearLevel))).sort() as string[];
-      const majors = Array.from(new Set(data.map((s: Student) => s.major))).sort() as string[];
+      const years = Array.from(new Set(studentsData.map((s: Student) => s.yearLevel))).sort() as string[];
+      const majors = Array.from(new Set(studentsData.map((s: Student) => s.major))).sort() as string[];
       if (years.length > allYears.length) setAllYears(years);
       if (majors.length > allMajors.length) setAllMajors(majors);
 
