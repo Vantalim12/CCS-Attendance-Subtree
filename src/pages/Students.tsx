@@ -35,6 +35,9 @@ const Students: React.FC = () => {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
 
+  // Safety wrapper to ensure students is always an array
+  const safeStudents = Array.isArray(students) ? students : [];
+
   useEffect(() => {
     fetchStudents();
   }, [refreshTrigger]);
@@ -102,7 +105,7 @@ const Students: React.FC = () => {
   // Calculate officers count from stats
   const officersCount = stats.governor + stats['vice-governor'] + stats['under-secretary'];
 
-  if (loading && students.length === 0) {
+  if (loading && safeStudents.length === 0) {
     return (
       <div className="flex justify-center py-8">
         <LoadingSpinner />
@@ -169,9 +172,9 @@ const Students: React.FC = () => {
               >
                 <span>{tab.icon}</span>
                 {tab.label}
-                {tab.id === "list" && students.length > 0 && (
+                {tab.id === "list" && safeStudents.length > 0 && (
                   <span className="bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs">
-                    {students.length}
+                    {safeStudents.length}
                   </span>
                 )}
               </button>
@@ -205,7 +208,7 @@ const Students: React.FC = () => {
           {/* QR Generator Tab */}
           {activeTab === "qr" && isAdmin && (
             <QRGenerator
-              students={students}
+              students={safeStudents}
               onGenerateSuccess={triggerRefresh}
             />
           )}
@@ -271,13 +274,13 @@ const Students: React.FC = () => {
       </div>
 
       {/* Recent Activity */}
-      {students.length > 0 && (
+      {safeStudents.length > 0 && (
         <div className="glass-card p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Recent Students
           </h3>
           <div className="space-y-3">
-            {students
+            {[...safeStudents]
               .sort(
                 (a, b) =>
                   new Date(b.createdAt).getTime() -
