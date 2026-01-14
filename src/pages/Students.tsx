@@ -8,11 +8,26 @@ import ExcelImport from "../components/students/ExcelImport";
 import QRGenerator from "../components/students/QRGenerator";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
+interface StudentStats {
+  total: number;
+  regular: number;
+  governor: number;
+  'vice-governor': number;
+  'under-secretary': number;
+}
+
 const Students: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"list" | "add" | "import" | "qr">(
     "list"
   );
   const [students, setStudents] = useState<Student[]>([]);
+  const [stats, setStats] = useState<StudentStats>({
+    total: 0,
+    regular: 0,
+    governor: 0,
+    'vice-governor': 0,
+    'under-secretary': 0,
+  });
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -28,8 +43,12 @@ const Students: React.FC = () => {
     try {
       setLoading(true);
       setError("");
-      const response = await api.get("/students");
-      setStudents(response.data);
+      const response = await api.get("/students?limit=100");
+
+      // Handle new paginated response format
+      const { data, stats: responseStats } = response.data;
+      setStudents(data);
+      setStats(responseStats);
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch students");
     } finally {
@@ -71,6 +90,9 @@ const Students: React.FC = () => {
     { id: "qr" as const, label: "Generate QR", icon: "🔗", show: isAdmin },
   ].filter((tab) => tab.show);
 
+  // Calculate officers count from stats
+  const officersCount = stats.governor + stats['vice-governor'] + stats['under-secretary'];
+
   if (loading && students.length === 0) {
     return (
       <div className="flex justify-center py-8">
@@ -97,13 +119,13 @@ const Students: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {students.length}
+                {stats.total}
               </div>
               <div className="text-sm text-gray-500">Total Students</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {students.filter((s) => s.status !== "regular").length}
+                {officersCount}
               </div>
               <div className="text-sm text-gray-500">Officers</div>
             </div>
@@ -132,8 +154,8 @@ const Students: React.FC = () => {
                   }
                 }}
                 className={`${activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
               >
                 <span>{tab.icon}</span>
@@ -215,12 +237,12 @@ const Students: React.FC = () => {
 
       {/* Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {["regular", "governor", "vice-governor", "under-secretary"].map(
+        {(["regular", "governor", "vice-governor", "under-secretary"] as const).map(
           (status) => {
-            const count = students.filter((s) => s.status === status).length;
+            const count = stats[status];
             const percentage =
-              students.length > 0
-                ? ((count / students.length) * 100).toFixed(1)
+              stats.total > 0
+                ? ((count / stats.total) * 100).toFixed(1)
                 : "0";
 
             return (
