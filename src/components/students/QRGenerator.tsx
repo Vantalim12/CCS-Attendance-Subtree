@@ -20,7 +20,10 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const printRef = useRef<HTMLDivElement>(null);
 
-  const filteredStudents = students.filter(
+  // Safely handle students prop - ensure it's always an array
+  const safeStudents = Array.isArray(students) ? students : [];
+
+  const filteredStudents = safeStudents.filter(
     (student) =>
       `${student.firstName} ${student.lastName}`
         .toLowerCase()
@@ -245,7 +248,7 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({
               </h4>
               <div className="qr-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Object.entries(qrCodes).map(([studentId, qrCodeUrl]) => {
-                  const student = students.find((s) => s._id === studentId);
+                  const student = safeStudents.find((s) => s._id === studentId);
                   if (!student) return null;
 
                   return (
