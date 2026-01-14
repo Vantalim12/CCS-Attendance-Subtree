@@ -354,7 +354,7 @@ const Attendance: React.FC = () => {
             <div
               className="space-y-6 rounded-2xl overflow-hidden relative p-6 min-h-[600px] flex flex-col justify-center"
               style={{
-                backgroundImage: "url(/starwars.jpg)",
+                backgroundImage: `url(${process.env.PUBLIC_URL}/starwars.jpg)`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }}

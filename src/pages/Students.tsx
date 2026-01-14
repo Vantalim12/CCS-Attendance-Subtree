@@ -45,9 +45,18 @@ const Students: React.FC = () => {
       setError("");
       const response = await api.get("/students?limit=100");
 
-      // Handle new paginated response format
-      const { data, stats: responseStats } = response.data;
-      setStudents(data);
+      // Handle new paginated response format safely
+      const responseData = response.data;
+      const data = responseData.data || (Array.isArray(responseData) ? responseData : []);
+      const responseStats = responseData.stats || {
+        total: 0,
+        regular: 0,
+        governor: 0,
+        'vice-governor': 0,
+        'under-secretary': 0
+      };
+
+      setStudents(Array.isArray(data) ? data : []);
       setStats(responseStats);
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch students");

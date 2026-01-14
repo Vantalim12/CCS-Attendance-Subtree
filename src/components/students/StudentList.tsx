@@ -83,8 +83,11 @@ const StudentList: React.FC<StudentListProps> = ({
 
       const response = await api.get(`/students?${params.toString()}`);
 
-      // Handle new paginated response format
-      const { data, meta } = response.data;
+      // Handle new paginated response format safely
+      const responseData = response.data;
+      const data = responseData.data || (Array.isArray(responseData) ? responseData : []);
+      const meta = responseData.meta || { total: data.length, totalPages: 1, page: 1, limit: itemsPerPage };
+
       setStudents(data);
       setTotalItems(meta.total);
       setTotalPages(meta.totalPages);
