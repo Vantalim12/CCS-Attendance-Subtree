@@ -17,7 +17,6 @@ interface Student {
 const PublicEventAttendance: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [students, setStudents] = useState<Student[]>([]);
-    const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState('');
@@ -34,19 +33,16 @@ const PublicEventAttendance: React.FC = () => {
             setError('');
         } catch (err) {
             console.error('Failed to fetch attendance', err);
-            // Only show error text if completely failed on first load
             if (showLoading) setError('Failed to load attendance data.');
         } finally {
             if (showLoading) setLoading(false);
         }
     }, [id]);
 
-    // Initial load
     useEffect(() => {
         fetchAttendance(true);
     }, [fetchAttendance]);
 
-    // Polling every 30 seconds
     useEffect(() => {
         const interval = setInterval(() => {
             fetchAttendance(false);
@@ -54,15 +50,29 @@ const PublicEventAttendance: React.FC = () => {
         return () => clearInterval(interval);
     }, [fetchAttendance]);
 
-    // Filter logic
-    useEffect(() => {
+    // Grouping Logic
+    const getGroupedStudents = () => {
         const filtered = students.filter(student =>
-            student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+            // Only search by ID since Name is hidden/private
+            student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            student.major.toLowerCase().includes(searchTerm.toLowerCase())
         );
-        setFilteredStudents(filtered);
-    }, [searchTerm, students]);
+
+        const groups: { [key: string]: Student[] } = {};
+
+        filtered.forEach(student => {
+            const orgName = student.organization?.name || 'Other';
+            if (!groups[orgName]) {
+                groups[orgName] = [];
+            }
+            groups[orgName].push(student);
+        });
+
+        return groups;
+    };
+
+    const groupedStudents = getGroupedStudents();
+    const sortedOrgNames = Object.keys(groupedStudents).sort();
 
     if (loading && students.length === 0) {
         return (
@@ -101,7 +111,7 @@ const PublicEventAttendance: React.FC = () => {
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder="Search student..."
+                                placeholder="Search Student ID..."
                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -116,53 +126,55 @@ const PublicEventAttendance: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-white/10 bg-white/5">
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Student Name</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Student ID</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Program</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Year</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {filteredStudents.length > 0 ? (
-                                filteredStudents.map((student) => (
-                                    <tr key={student.studentId} className="hover:bg-white/5 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-white">
-                                                {student.lastName}, {student.firstName}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-400 font-mono">{student.studentId}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-300">{student.major}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                                                {student.yearLevel}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                                        {searchTerm ? 'No matches found.' : 'No students found for this event yet.'}
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+            {sortedOrgNames.length > 0 ? (
+                <div className="space-y-8">
+                    {sortedOrgNames.map(orgName => (
+                        <div key={orgName} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">
+                            <div className="px-6 py-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
+                                <h2 className="text-xl font-bold text-cyan-400">{orgName}</h2>
+                                <span className="text-sm text-gray-400 bg-black/20 px-3 py-1 rounded-full">
+                                    {groupedStudents[orgName].length} Students
+                                </span>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b border-white/10 bg-white/5">
+                                            {/* Name column removed for privacy */}
+                                            <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Student ID</th>
+                                            <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Program</th>
+                                            <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Year</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {groupedStudents[orgName].map((student) => (
+                                            <tr key={student.studentId} className="hover:bg-white/5 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-mono font-medium text-white">{student.studentId}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-300">{student.major}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                                                        {student.yearLevel}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-                <div className="px-6 py-4 border-t border-white/10 bg-white/5 text-gray-400 text-sm flex justify-between items-center">
-                    <span>Total Present: <span className="text-white font-bold">{filteredStudents.length}</span></span>
+            ) : (
+                <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                    <p className="text-gray-400 text-lg">
+                        {searchTerm ? 'No matches found.' : 'No students found for this event yet.'}
+                    </p>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

@@ -13,11 +13,13 @@ const PublicLayout: React.FC = () => {
             <header className="relative z-10 border-b border-white/10 bg-black/20 backdrop-blur-xl">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <span className="font-bold text-white text-lg">A</span>
-                        </div>
                         <Link to="/" className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
                             CCS Attendance
+                        </Link>
+                    </div>
+                    <div>
+                        <Link to="/" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                            Back to Dashboard
                         </Link>
                     </div>
                 </div>
