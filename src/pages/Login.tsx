@@ -75,12 +75,6 @@ const Login: React.FC = () => {
             <h1 className="text-4xl md:text-6xl font-display font-bold text-ink mb-6 tracking-tight">
               <span className="text-gradient">CCS Attendance System</span>
             </h1>
-            <div className="mt-8 flex justify-center gap-4">
-              <Link to="/public/events" className="btn-secondary px-8 py-3 text-lg group">
-                <span className="group-hover:text-cyan-600 transition-colors">Log in as Student</span>
-                <span className="ml-2 text-sm text-gray-500 block group-hover:text-cyan-500">(View Attendance)</span>
-              </Link>
-            </div>
           </div>
         </div>
       </div>
@@ -173,7 +167,35 @@ const Login: React.FC = () => {
                 </button>
               </div>
 
-              <div className="text-center">
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-ink/10"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white/50 text-ink-muted backdrop-blur-sm rounded">
+                    or view attendance
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Link
+                  to="/public/events?org=CCS"
+                  className="p-4 rounded-xl border border-ink/10 bg-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all duration-300 group text-center"
+                >
+                  <div className="text-cyan-600 font-bold mb-1 group-hover:text-cyan-500">CCS</div>
+                  <div className="text-xs text-ink-muted">Directory</div>
+                </Link>
+                <Link
+                  to="/public/events?org=CED"
+                  className="p-4 rounded-xl border border-ink/10 bg-white/5 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group text-center"
+                >
+                  <div className="text-purple-600 font-bold mb-1 group-hover:text-purple-500">CED</div>
+                  <div className="text-xs text-ink-muted">Directory</div>
+                </Link>
+              </div>
+
+              <div className="text-center mt-6">
                 <p className="text-sm text-ink-muted">
                   Don't have an account?{" "}
                   <Link
