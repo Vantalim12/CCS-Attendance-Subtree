@@ -18,6 +18,9 @@ import Attendance from "./pages/Attendance";
 import StudentAttendance from "./pages/StudentAttendance";
 import Reports from "./pages/Reports";
 import LoadingSpinner from "./components/common/LoadingSpinner";
+import PublicLayout from "./components/layout/PublicLayout";
+import PublicEventList from "./pages/public/PublicEventList";
+import PublicEventAttendance from "./pages/public/PublicEventAttendance";
 import "./App.css";
 
 function App() {
@@ -36,6 +39,11 @@ function App() {
       <div className="App">
         <Routes>
           {/* Public routes */}
+          <Route path="/public" element={<PublicLayout />}>
+            <Route path="events" element={<PublicEventList />} />
+            <Route path="events/:id" element={<PublicEventAttendance />} />
+          </Route>
+
           <Route
             path="/login"
             element={

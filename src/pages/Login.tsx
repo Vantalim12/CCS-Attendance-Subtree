@@ -75,6 +75,12 @@ const Login: React.FC = () => {
             <h1 className="text-4xl md:text-6xl font-display font-bold text-ink mb-6 tracking-tight">
               <span className="text-gradient">CCS Attendance System</span>
             </h1>
+            <div className="mt-8 flex justify-center gap-4">
+              <Link to="/public/events" className="btn-secondary px-8 py-3 text-lg group">
+                <span className="group-hover:text-cyan-600 transition-colors">Log in as Student</span>
+                <span className="ml-2 text-sm text-gray-500 block group-hover:text-cyan-500">(View Attendance)</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
