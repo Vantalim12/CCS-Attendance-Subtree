@@ -50,9 +50,7 @@ const Login: React.FC = () => {
 
             {/* CTA */}
             <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
-              <Link to="/register" className="btn-secondary mr-4">
-                Sign up
-              </Link>
+              {/* Sign up removed */}
             </div>
           </div>
         </div>
@@ -196,15 +194,7 @@ const Login: React.FC = () => {
               </div>
 
               <div className="text-center mt-6">
-                <p className="text-sm text-ink-muted">
-                  Don't have an account?{" "}
-                  <Link
-                    to="/register"
-                    className="font-medium text-primary hover:text-primary-600 transition-colors duration-200"
-                  >
-                    Sign up here
-                  </Link>
-                </p>
+                {/* Sign up link removed */}
               </div>
             </form>
           </div>
