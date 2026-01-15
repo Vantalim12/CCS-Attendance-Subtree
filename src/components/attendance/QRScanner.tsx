@@ -79,7 +79,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
           fps: 10,
           qrbox: { width: 300, height: 300 },
           aspectRatio: 1.0,
-          disableFlip: false, // Allow scanning flipped QR codes
+          disableFlip: true, // Disable mirroring for front camera on laptops
           videoConstraints: {
             facingMode: "environment", // Use back camera on mobile
             width: { ideal: 1280 },
