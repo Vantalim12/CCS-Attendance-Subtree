@@ -40,12 +40,31 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
     setIsSearching(true);
     setNetworkError(false);
     try {
+      console.log("Searching for students with query:", query);
+      console.log("Encoded query:", encodeURIComponent(query));
+
       // Check authentication status
+      const token = localStorage.getItem("token");
       const user = localStorage.getItem("user");
+      console.log("Token exists:", !!token);
+      console.log("User exists:", !!user);
+      if (user) {
+        try {
+          const parsedUser = JSON.parse(user);
+          console.log("User role:", parsedUser.role);
+        } catch (e) {
+          console.log("Error parsing user:", e);
+        }
+      }
 
       const response = await api.get(
         `/students?search=${encodeURIComponent(query)}`
       );
+
+      console.log("Search response status:", response.status);
+      console.log("Search response data:", response.data);
+      console.log("Response data type:", typeof response.data);
+      console.log("Is response data an array?", Array.isArray(response.data));
 
       // Handle different response formats
       let students = [];
@@ -59,6 +78,9 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
         console.warn("Unexpected response format:", response.data);
         students = [];
       }
+
+      console.log("Processed students array:", students);
+      console.log("Number of students found:", students.length);
 
       // Filter out invalid records if any
       students = students.filter((student: Student) => {
@@ -103,6 +125,9 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
         errorMessage = error.message;
       }
 
+      console.log("Final error message:", errorMessage);
+      console.log("Is network issue:", isNetworkIssue);
+
       onError(errorMessage);
       setSearchResults([]);
       setShowDropdown(false);
@@ -125,6 +150,7 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
       return;
     }
 
+    console.log("Starting search for:", searchQuery); // Debug log
     const searchTimeout = setTimeout(async () => {
       await searchStudents(searchQuery.trim());
     }, 300);
@@ -165,6 +191,8 @@ const ManualIdInput: React.FC<ManualIdInputProps> = ({
         eventId: selectedEvent._id,
         session,
       });
+
+      console.log("Attendance marked successfully:", response.data);
 
       // Handle different name formats
       let studentName = "";

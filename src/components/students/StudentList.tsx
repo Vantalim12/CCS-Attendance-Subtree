@@ -10,13 +10,6 @@ interface StudentListProps {
   onEditStudent?: (student: Student) => void;
 }
 
-interface PaginationMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
 const StudentList: React.FC<StudentListProps> = ({
   refreshTrigger,
   onStudentSelect,
@@ -34,83 +27,53 @@ const StudentList: React.FC<StudentListProps> = ({
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-
-  // For filter dropdowns, we need all unique values - fetch these separately or use stats
-  const [allYears, setAllYears] = useState<string[]>([]);
-  const [allMajors, setAllMajors] = useState<string[]>([]);
-
   const applyFilters = useCallback(() => {
-    // With server-side pagination, we don't filter on the client anymore
-    // The students array is already filtered by the server
-    setFilteredStudents(students);
-  }, [students]);
+    let filtered = students;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (student) =>
+          `${student.firstName} ${student.lastName}`
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student.major.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((student) => student.status === statusFilter);
+    }
+
+    // Year filter
+    if (yearFilter !== "all") {
+      filtered = filtered.filter((student) => student.yearLevel === yearFilter);
+    }
+
+    // Major filter
+    if (majorFilter !== "all") {
+      filtered = filtered.filter((student) => student.major === majorFilter);
+    }
+
+    setFilteredStudents(filtered);
+  }, [students, searchTerm, statusFilter, yearFilter, majorFilter]);
 
   useEffect(() => {
     fetchStudents();
-  }, [refreshTrigger, currentPage, itemsPerPage]);
+  }, [refreshTrigger]);
 
   useEffect(() => {
     applyFilters();
   }, [applyFilters]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    } else {
-      fetchStudents();
-    }
-  }, [searchTerm, statusFilter, yearFilter, majorFilter]);
-
   const fetchStudents = async () => {
     try {
       setLoading(true);
       setError("");
-
-      const params = new URLSearchParams();
-      params.append("page", currentPage.toString());
-      params.append("limit", itemsPerPage.toString());
-
-      if (searchTerm) params.append("search", searchTerm);
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (yearFilter !== "all") params.append("yearLevel", yearFilter);
-      if (majorFilter !== "all") params.append("major", majorFilter);
-
-      const response = await api.get(`/students?${params.toString()}`);
-
-      // Handle both old (array) and new (paginated object) response formats
-      let studentsData: Student[] = [];
-      let totalCount = 0;
-      let pages = 1;
-
-      if (Array.isArray(response.data)) {
-        // Old format: response.data is directly an array
-        studentsData = response.data;
-        totalCount = response.data.length;
-        pages = 1;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        // New format: { data: [], meta: {}, stats: {} }
-        studentsData = response.data.data;
-        const meta = response.data.meta || {};
-        totalCount = meta.total || studentsData.length;
-        pages = meta.totalPages || 1;
-      }
-
-      setStudents(studentsData);
-      setTotalItems(totalCount);
-      setTotalPages(pages);
-
-      // Update unique filter values from the fetched data
-      const years = Array.from(new Set(studentsData.map((s: Student) => s.yearLevel))).sort() as string[];
-      const majors = Array.from(new Set(studentsData.map((s: Student) => s.major))).sort() as string[];
-      if (years.length > allYears.length) setAllYears(years);
-      if (majors.length > allMajors.length) setAllMajors(majors);
-
+      const response = await api.get("/students");
+      setStudents(response.data);
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch students");
     } finally {
@@ -345,7 +308,7 @@ const StudentList: React.FC<StudentListProps> = ({
         {/* Results Summary */}
         <div className="mt-4 flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Showing {filteredStudents.length} of {totalItems} students (Page {currentPage} of {totalPages})
+            Showing {filteredStudents.length} of {students.length} students
           </p>
           <div className="flex gap-2">
             <button
@@ -452,78 +415,6 @@ const StudentList: React.FC<StudentListProps> = ({
           ))
         )}
       </div>
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="bg-white p-4 rounded-lg shadow flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Items per page:</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="input-field w-20"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ← Previous
-            </button>
-
-            <div className="flex items-center gap-1">
-              {/* Page numbers */}
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum: number;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-1 rounded ${currentPage === pageNum
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next →
-            </button>
-          </div>
-
-          <div className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </div>
-        </div>
-      )}
 
       {/* Selected Student Details */}
       {selectedStudent && (

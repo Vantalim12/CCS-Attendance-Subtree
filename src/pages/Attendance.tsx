@@ -325,8 +325,8 @@ const Attendance: React.FC = () => {
                   if (tab.id !== "scan") setIsQRActive(false);
                 }}
                 className={`${activeTab === tab.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-ink-muted"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-ink-muted"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors duration-200`}
                 onMouseEnter={(e) => {
                   if (activeTab !== tab.id) {
@@ -351,18 +351,9 @@ const Attendance: React.FC = () => {
         <div className="p-6">
           {/* QR Scanner Tab */}
           {activeTab === "scan" && (
-            <div
-              className="space-y-6 rounded-2xl overflow-hidden relative p-6 min-h-[600px] flex flex-col justify-center"
-              style={{
-                backgroundImage: `url(${process.env.PUBLIC_URL}/starwars.jpg)`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
-              <div className="absolute inset-0 bg-black/50 z-0"></div>
-
-              <div className="relative z-10 text-center">
-                <h3 className="text-2xl font-display font-bold text-white mb-6 drop-shadow-lg tracking-wide">
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="text-lg font-display font-semibold text-ink mb-4">
                   QR Code Scanner
                 </h3>
 

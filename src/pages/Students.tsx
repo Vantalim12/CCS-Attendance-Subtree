@@ -8,35 +8,17 @@ import ExcelImport from "../components/students/ExcelImport";
 import QRGenerator from "../components/students/QRGenerator";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
-interface StudentStats {
-  total: number;
-  regular: number;
-  governor: number;
-  'vice-governor': number;
-  'under-secretary': number;
-}
-
 const Students: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"list" | "add" | "import" | "qr">(
     "list"
   );
   const [students, setStudents] = useState<Student[]>([]);
-  const [stats, setStats] = useState<StudentStats>({
-    total: 0,
-    regular: 0,
-    governor: 0,
-    'vice-governor': 0,
-    'under-secretary': 0,
-  });
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
-
-  // Safety wrapper to ensure students is always an array
-  const safeStudents = Array.isArray(students) ? students : [];
 
   useEffect(() => {
     fetchStudents();
@@ -46,32 +28,8 @@ const Students: React.FC = () => {
     try {
       setLoading(true);
       setError("");
-      const response = await api.get("/students?limit=100");
-
-      // Handle both old (array) and new (paginated object) response formats
-      let studentsData: Student[] = [];
-      let statsData = {
-        total: 0,
-        regular: 0,
-        governor: 0,
-        'vice-governor': 0,
-        'under-secretary': 0
-      };
-
-      if (Array.isArray(response.data)) {
-        // Old format: response.data is directly an array
-        studentsData = response.data;
-        statsData.total = response.data.length;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        // New format: { data: [], meta: {}, stats: {} }
-        studentsData = response.data.data;
-        if (response.data.stats) {
-          statsData = response.data.stats;
-        }
-      }
-
-      setStudents(studentsData);
-      setStats(statsData);
+      const response = await api.get("/students");
+      setStudents(response.data);
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch students");
     } finally {
@@ -113,10 +71,7 @@ const Students: React.FC = () => {
     { id: "qr" as const, label: "Generate QR", icon: "🔗", show: isAdmin },
   ].filter((tab) => tab.show);
 
-  // Calculate officers count from stats
-  const officersCount = stats.governor + stats['vice-governor'] + stats['under-secretary'];
-
-  if (loading && safeStudents.length === 0) {
+  if (loading && students.length === 0) {
     return (
       <div className="flex justify-center py-8">
         <LoadingSpinner />
@@ -142,13 +97,13 @@ const Students: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {stats.total}
+                {students.length}
               </div>
               <div className="text-sm text-gray-500">Total Students</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {officersCount}
+                {students.filter((s) => s.status !== "regular").length}
               </div>
               <div className="text-sm text-gray-500">Officers</div>
             </div>
@@ -177,15 +132,15 @@ const Students: React.FC = () => {
                   }
                 }}
                 className={`${activeTab === tab.id
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
-                {tab.id === "list" && safeStudents.length > 0 && (
+                {tab.id === "list" && students.length > 0 && (
                   <span className="bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs">
-                    {safeStudents.length}
+                    {students.length}
                   </span>
                 )}
               </button>
@@ -219,7 +174,7 @@ const Students: React.FC = () => {
           {/* QR Generator Tab */}
           {activeTab === "qr" && isAdmin && (
             <QRGenerator
-              students={safeStudents}
+              students={students}
               onGenerateSuccess={triggerRefresh}
             />
           )}
@@ -260,12 +215,12 @@ const Students: React.FC = () => {
 
       {/* Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {(["regular", "governor", "vice-governor", "under-secretary"] as const).map(
+        {["regular", "governor", "vice-governor", "under-secretary"].map(
           (status) => {
-            const count = stats[status];
+            const count = students.filter((s) => s.status === status).length;
             const percentage =
-              stats.total > 0
-                ? ((count / stats.total) * 100).toFixed(1)
+              students.length > 0
+                ? ((count / students.length) * 100).toFixed(1)
                 : "0";
 
             return (
@@ -285,13 +240,13 @@ const Students: React.FC = () => {
       </div>
 
       {/* Recent Activity */}
-      {safeStudents.length > 0 && (
+      {students.length > 0 && (
         <div className="glass-card p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Recent Students
           </h3>
           <div className="space-y-3">
-            {[...safeStudents]
+            {students
               .sort(
                 (a, b) =>
                   new Date(b.createdAt).getTime() -
