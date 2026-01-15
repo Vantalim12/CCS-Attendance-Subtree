@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 interface Event {
@@ -15,13 +15,17 @@ const PublicEventList: React.FC = () => {
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [searchParams] = useSearchParams();
+    const org = searchParams.get('org');
 
     useEffect(() => {
         const fetchEvents = async () => {
             try {
                 // Use REACT_APP_API_URL if available, otherwise default relative path or hardcoded
                 const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-                const response = await axios.get(`${apiUrl}/public/events`);
+                const response = await axios.get(`${apiUrl}/public/events`, {
+                    params: { org }
+                });
                 setEvents(response.data);
             } catch (err) {
                 console.error('Failed to fetch events', err);
@@ -32,7 +36,7 @@ const PublicEventList: React.FC = () => {
         };
 
         fetchEvents();
-    }, []);
+    }, [org]);
 
     if (loading) {
         return (
@@ -56,7 +60,7 @@ const PublicEventList: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">
-                    Today's <span className="text-cyan-400">Events</span>
+                    Today's <span className="text-cyan-400">{org ? `${org} ` : ''}Events</span>
                 </h1>
                 <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                     Select an event to view the live attendance directory.
