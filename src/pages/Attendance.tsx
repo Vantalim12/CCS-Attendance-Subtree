@@ -92,6 +92,7 @@ const Attendance: React.FC = () => {
 
     try {
       setError("");
+      console.log(`[Frontend] Sending attendance for Event: ${selectedEvent.title} (${selectedEvent._id})`);
       const response = await api.post("/attendance", {
         qrCodeData,
         eventId: selectedEvent._id,
@@ -325,8 +326,8 @@ const Attendance: React.FC = () => {
                   if (tab.id !== "scan") setIsQRActive(false);
                 }}
                 className={`${activeTab === tab.id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-ink-muted"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-ink-muted"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors duration-200`}
                 onMouseEnter={(e) => {
                   if (activeTab !== tab.id) {
