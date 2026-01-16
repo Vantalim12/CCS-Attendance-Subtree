@@ -211,6 +211,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
         clearTimeout(processingTimeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, cameraId]);
 
   const manualRestart = () => {
