@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Student } from "../../types";
 import { api } from "../../services/auth.service";
 import { useAuth } from "../../hooks/useAuth";
@@ -40,10 +40,38 @@ const StudentList: React.FC<StudentListProps> = ({
 
   // Fetch students when filters or page change
   useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const params = new URLSearchParams();
+        params.append('page', currentPage.toString());
+        params.append('limit', '50');
+        if (debouncedSearch) params.append('search', debouncedSearch);
+        if (statusFilter !== 'all') params.append('status', statusFilter);
+        if (yearFilter !== 'all') params.append('yearLevel', yearFilter);
+        if (majorFilter !== 'all') params.append('major', majorFilter);
+
+        const response = await api.get(`/students?${params.toString()}`);
+        // Handle both old format (array) and new format (object with pagination)
+        if (Array.isArray(response.data)) {
+          setStudents(response.data);
+          setPagination({ total: response.data.length, page: 1, limit: 50, totalPages: 1 });
+        } else {
+          setStudents(response.data.students || []);
+          setPagination(response.data.pagination || { total: 0, page: 1, limit: 50, totalPages: 1 });
+        }
+      } catch (error: any) {
+        setError(error.response?.data?.message || "Failed to fetch students");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchStudents();
   }, [refreshTrigger, debouncedSearch, statusFilter, yearFilter, majorFilter, currentPage]);
 
-  const fetchStudents = async () => {
+  const refetchStudents = async () => {
     try {
       setLoading(true);
       setError("");
@@ -88,7 +116,7 @@ const StudentList: React.FC<StudentListProps> = ({
 
     try {
       await api.delete(`/students/${studentId}`);
-      await fetchStudents();
+      await refetchStudents();
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to delete student");
     }
@@ -176,7 +204,7 @@ const StudentList: React.FC<StudentListProps> = ({
     try {
       setLoading(true);
       await api.delete("/students/all");
-      await fetchStudents();
+      await refetchStudents();
       setSelectedStudent(null);
       onStudentSelect?.(null);
     } catch (error: any) {
