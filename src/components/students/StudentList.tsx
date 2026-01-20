@@ -16,64 +16,54 @@ const StudentList: React.FC<StudentListProps> = ({
   onEditStudent,
 }) => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [majorFilter, setMajorFilter] = useState<string>("all");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 50, totalPages: 1 });
   const { hasRole } = useAuth();
   const isAdmin = hasRole("admin");
 
-  const applyFilters = useCallback(() => {
-    let filtered = students;
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (student) =>
-          `${student.firstName} ${student.lastName}`
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          student.major.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((student) => student.status === statusFilter);
-    }
-
-    // Year filter
-    if (yearFilter !== "all") {
-      filtered = filtered.filter((student) => student.yearLevel === yearFilter);
-    }
-
-    // Major filter
-    if (majorFilter !== "all") {
-      filtered = filtered.filter((student) => student.major === majorFilter);
-    }
-
-    setFilteredStudents(filtered);
-  }, [students, searchTerm, statusFilter, yearFilter, majorFilter]);
-
+  // Fetch students when filters or page change
   useEffect(() => {
     fetchStudents();
-  }, [refreshTrigger]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [applyFilters]);
+  }, [refreshTrigger, debouncedSearch, statusFilter, yearFilter, majorFilter, currentPage]);
 
   const fetchStudents = async () => {
     try {
       setLoading(true);
       setError("");
-      const response = await api.get("/students");
-      setStudents(response.data);
+      const params = new URLSearchParams();
+      params.append('page', currentPage.toString());
+      params.append('limit', '50');
+      if (debouncedSearch) params.append('search', debouncedSearch);
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (yearFilter !== 'all') params.append('yearLevel', yearFilter);
+      if (majorFilter !== 'all') params.append('major', majorFilter);
+
+      const response = await api.get(`/students?${params.toString()}`);
+      // Handle both old format (array) and new format (object with pagination)
+      if (Array.isArray(response.data)) {
+        setStudents(response.data);
+        setPagination({ total: response.data.length, page: 1, limit: 50, totalPages: 1 });
+      } else {
+        setStudents(response.data.students || []);
+        setPagination(response.data.pagination || { total: 0, page: 1, limit: 50, totalPages: 1 });
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch students");
     } finally {
@@ -118,7 +108,7 @@ const StudentList: React.FC<StudentListProps> = ({
     ];
 
     // Convert student data to CSV rows
-    const rows = filteredStudents.map((student) => [
+    const rows = students.map((student: Student) => [
       student.studentId,
       student.firstName,
       student.lastName,
@@ -308,12 +298,13 @@ const StudentList: React.FC<StudentListProps> = ({
         {/* Results Summary */}
         <div className="mt-4 flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Showing {filteredStudents.length} of {students.length} students
+            Showing {students.length} of {pagination.total} students
+            {pagination.totalPages > 1 && ` (Page ${pagination.page} of ${pagination.totalPages})`}
           </p>
           <div className="flex gap-2">
             <button
               onClick={handleExportToCSV}
-              disabled={filteredStudents.length === 0}
+              disabled={students.length === 0}
               className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               title="Export filtered students to CSV"
             >
@@ -353,12 +344,12 @@ const StudentList: React.FC<StudentListProps> = ({
 
       {/* Student Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStudents.length === 0 ? (
+        {students.length === 0 ? (
           <div className="col-span-full text-center py-8 text-gray-500">
-            No students found matching your criteria
+            {loading ? 'Loading...' : 'No students found matching your criteria'}
           </div>
         ) : (
-          filteredStudents.map((student) => (
+          students.map((student) => (
             <div
               key={student._id}
               onClick={() => handleStudentClick(student)}
@@ -415,6 +406,29 @@ const StudentList: React.FC<StudentListProps> = ({
           ))
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {pagination.totalPages > 1 && (
+        <div className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className="btn-secondary disabled:opacity-50"
+          >
+            ← Previous
+          </button>
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+            disabled={currentPage >= pagination.totalPages}
+            className="btn-secondary disabled:opacity-50"
+          >
+            Next →
+          </button>
+        </div>
+      )}
 
       {/* Selected Student Details */}
       {selectedStudent && (
