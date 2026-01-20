@@ -29,7 +29,12 @@ const Students: React.FC = () => {
       setLoading(true);
       setError("");
       const response = await api.get("/students");
-      setStudents(response.data);
+      // Handle both old format (array) and new format (object with pagination)
+      if (Array.isArray(response.data)) {
+        setStudents(response.data);
+      } else {
+        setStudents(response.data.students || []);
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch students");
     } finally {
@@ -132,8 +137,8 @@ const Students: React.FC = () => {
                   }
                 }}
                 className={`${activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
               >
                 <span>{tab.icon}</span>
