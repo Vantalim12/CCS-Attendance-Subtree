@@ -28,7 +28,8 @@ const Students: React.FC = () => {
     try {
       setLoading(true);
       setError("");
-      const response = await api.get("/students");
+      // Fetch all students (no pagination limit) for QR generator and stats
+      const response = await api.get("/students?limit=10000");
       // Handle both old format (array) and new format (object with pagination)
       if (Array.isArray(response.data)) {
         setStudents(response.data);
