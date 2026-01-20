@@ -262,9 +262,6 @@ const QRGenerator: React.FC<QRGeneratorProps> = ({
                         <div className="font-medium text-gray-900">
                           {student.firstName} {student.lastName}
                         </div>
-                        <div className="text-sm text-gray-600">
-                          {student.studentId}
-                        </div>
                         <div className="text-xs text-gray-500">
                           {student.yearLevel} - {student.major}
                         </div>
