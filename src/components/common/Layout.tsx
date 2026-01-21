@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 // Icon components
 const IconComponent = ({
@@ -218,6 +219,21 @@ const IconComponent = ({
         />
       </svg>
     ),
+    key: (
+      <svg
+        className={className}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+        />
+      </svg>
+    ),
   };
   return icons[name as keyof typeof icons] || null;
 };
@@ -227,7 +243,10 @@ const Layout: React.FC = () => {
   const location = useLocation();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const navigation = [
     {
@@ -288,16 +307,21 @@ const Layout: React.FC = () => {
       ) {
         setIsSidebarExpanded(false);
       }
+      // Close user menu when clicking outside
+      if (
+        isUserMenuOpen &&
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsUserMenuOpen(false);
+      }
     };
 
-    if (isSidebarExpanded && !isPinned) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isSidebarExpanded, isPinned]);
+  }, [isSidebarExpanded, isPinned, isUserMenuOpen]);
 
   const toggleSidebar = () => {
     setIsSidebarExpanded(!isSidebarExpanded);
@@ -495,17 +519,46 @@ const Layout: React.FC = () => {
               <div className="notification-dot" />
             </button>
 
-            {/* User menu */}
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <div className="text-base font-medium text-ink">
-                  {user?.email}
+            {/* User menu with dropdown */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center space-x-4 p-2 rounded-lg transition-colors duration-200 hover:bg-ink/5"
+              >
+                <div className="text-right">
+                  <div className="text-base font-medium text-ink">
+                    {user?.email}
+                  </div>
+                  <div className="text-sm text-ink-muted">{user?.role}</div>
                 </div>
-                <div className="text-sm text-ink-muted">{user?.role}</div>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-gradient-brand flex items-center justify-center">
-                <IconComponent name="user" className="w-6 h-6 text-white" />
-              </div>
+                <div className="w-12 h-12 rounded-full bg-gradient-brand flex items-center justify-center">
+                  <IconComponent name="user" className="w-6 h-6 text-white" />
+                </div>
+              </button>
+
+              {/* Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 glass-card-lg rounded-lg shadow-lg py-2 z-50">
+                  <button
+                    onClick={() => {
+                      setIsChangePasswordOpen(true);
+                      setIsUserMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm text-ink hover:bg-ink/5 flex items-center gap-3 transition-colors"
+                  >
+                    <IconComponent name="key" className="w-5 h-5 text-ink-muted" />
+                    Change Password
+                  </button>
+                  <div className="border-t border-ink/10 my-1" />
+                  <button
+                    onClick={logout}
+                    className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                  >
+                    <IconComponent name="logout" className="w-5 h-5" />
+                    Sign out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -523,8 +576,15 @@ const Layout: React.FC = () => {
           onClick={() => setIsSidebarExpanded(false)}
         />
       )}
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   );
 };
 
 export default Layout;
+
