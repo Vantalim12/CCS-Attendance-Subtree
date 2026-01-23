@@ -261,11 +261,10 @@ const EventList: React.FC<EventListProps> = ({
               <div
                 key={event._id}
                 onClick={() => handleEventClick(event)}
-                className={`bg-white rounded-lg shadow border-2 transition-all cursor-pointer hover:shadow-md ${
-                  selectedEvent?._id === event._id
+                className={`bg-white rounded-lg shadow border-2 transition-all cursor-pointer hover:shadow-md ${selectedEvent?._id === event._id
                     ? "border-blue-500 bg-blue-50"
                     : "border-gray-200 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <div className="p-6">
                   <div className="flex items-start justify-between">
@@ -377,9 +376,8 @@ const EventList: React.FC<EventListProps> = ({
             <div>
               <label className="label">Status</label>
               <span
-                className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  getEventStatus(selectedEvent).color
-                }`}
+                className={`px-2 py-1 text-xs font-medium rounded-full ${getEventStatus(selectedEvent).color
+                  }`}
               >
                 {getEventStatus(selectedEvent).label}
               </span>
@@ -419,10 +417,10 @@ const EventList: React.FC<EventListProps> = ({
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
               <div className="text-sm text-blue-800">
                 <p>
-                  <strong>Scan Window:</strong> 15 minutes before event start
+                  <strong>Scan Window Opens:</strong> {selectedEvent.scanWindowMinutes || 15} minutes before event start
                 </p>
                 <p>
-                  <strong>Grace Period:</strong> 1 hour after event start
+                  <strong>Scan Window Closes:</strong> {selectedEvent.gracePeriodMinutes || 60} minutes after event end
                 </p>
                 <p>
                   <strong>Morning Session:</strong> Available during event time
