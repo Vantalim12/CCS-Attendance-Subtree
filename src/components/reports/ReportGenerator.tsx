@@ -93,7 +93,9 @@ const ReportGenerator: React.FC = () => {
       // Handle both old and new response formats
       const eventsData = eventsRes.data.events || eventsRes.data;
       setEvents(Array.isArray(eventsData) ? eventsData : []);
-      setStudents(studentsRes.data);
+      // Handle paginated students response
+      const studentsData = studentsRes.data.students || studentsRes.data;
+      setStudents(Array.isArray(studentsData) ? studentsData : []);
     } catch (error: any) {
       setError("Failed to fetch initial data");
     } finally {
@@ -231,9 +233,8 @@ const ReportGenerator: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `attendance-report-${
-        new Date().toISOString().split("T")[0]
-      }.xlsx`;
+      link.download = `attendance-report-${new Date().toISOString().split("T")[0]
+        }.xlsx`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -266,9 +267,8 @@ const ReportGenerator: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `attendance-report-${
-        new Date().toISOString().split("T")[0]
-      }.pdf`;
+      link.download = `attendance-report-${new Date().toISOString().split("T")[0]
+        }.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -364,11 +364,10 @@ const ReportGenerator: React.FC = () => {
               <button
                 key={type}
                 onClick={() => setReportType(type)}
-                className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                  reportType === type
+                className={`px-4 py-2 text-sm rounded-md transition-colors ${reportType === type
                     ? "bg-blue-600 text-white"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
+                  }`}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </button>
@@ -642,13 +641,12 @@ const ReportGenerator: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              trend.attendanceRate >= 80
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${trend.attendanceRate >= 80
                                 ? "bg-green-100 text-green-800"
                                 : trend.attendanceRate >= 60
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
                           >
                             {trend.attendanceRate.toFixed(1)}%
                           </span>
@@ -721,26 +719,24 @@ const ReportGenerator: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            record.morningStatus === "present"
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${record.morningStatus === "present"
                               ? "bg-green-100 text-green-800"
                               : record.morningStatus === "absent"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
+                                ? "bg-red-100 text-red-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
                         >
                           {record.morningStatus}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            record.afternoonStatus === "present"
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${record.afternoonStatus === "present"
                               ? "bg-green-100 text-green-800"
                               : record.afternoonStatus === "absent"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
+                                ? "bg-red-100 text-red-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
                         >
                           {record.afternoonStatus}
                         </span>

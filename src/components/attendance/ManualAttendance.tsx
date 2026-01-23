@@ -45,7 +45,9 @@ const ManualAttendance: React.FC<ManualAttendanceProps> = ({
   const fetchStudents = async () => {
     try {
       const response = await api.get("/students");
-      setStudents(response.data);
+      // Handle paginated response format
+      const studentsData = response.data.students || response.data;
+      setStudents(Array.isArray(studentsData) ? studentsData : []);
     } catch (error) {
       console.error("Error fetching students:", error);
     }
