@@ -10,7 +10,7 @@ interface ReportFilters {
   studentId: string;
   yearLevel: string;
   major: string;
-  status: "all" | "present" | "absent" | "excused";
+  status: "all" | "present" | "absent" | "excused" | "late";
   session: "all" | "morning" | "afternoon";
 }
 
@@ -56,64 +56,7 @@ const ReportGenerator: React.FC = () => {
     "summary" | "detailed" | "trends"
   >("summary");
 
-  const generateReport = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      // Build query parameters
-      const params = new URLSearchParams();
-      if (filters.startDate) params.append("startDate", filters.startDate);
-      if (filters.endDate) params.append("endDate", filters.endDate);
-      if (filters.eventId) params.append("eventId", filters.eventId);
-      if (filters.studentId) params.append("studentId", filters.studentId);
-      if (filters.yearLevel) params.append("yearLevel", filters.yearLevel);
-      if (filters.major) params.append("major", filters.major);
-      if (filters.status !== "all") params.append("status", filters.status);
-      if (filters.session !== "all") params.append("session", filters.session);
-
-      const response = await api.get(`/attendance/report?${params.toString()}`);
-      setAttendanceData(response.data.attendanceRecords || []);
-      calculateStatistics(response.data.attendanceRecords || []);
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to generate report");
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  const fetchInitialData = async () => {
-    try {
-      setLoading(true);
-      const [eventsRes, studentsRes] = await Promise.all([
-        api.get("/events"),
-        api.get("/students"),
-      ]);
-
-      // Handle both old and new response formats
-      const eventsData = eventsRes.data.events || eventsRes.data;
-      setEvents(Array.isArray(eventsData) ? eventsData : []);
-      // Handle paginated students response
-      const studentsData = studentsRes.data.students || studentsRes.data;
-      setStudents(Array.isArray(studentsData) ? studentsData : []);
-    } catch (error: any) {
-      setError("Failed to fetch initial data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (events.length > 0 && students.length > 0) {
-      generateReport();
-    }
-  }, [filters, events, students, generateReport]);
-
-  const calculateStatistics = (data: Attendance[]) => {
+  const calculateStatistics = useCallback((data: Attendance[]) => {
     if (data.length === 0) {
       setStats({
         totalStudents: 0,
@@ -134,10 +77,10 @@ const ReportGenerator: React.FC = () => {
     const uniqueEvents = new Set(data.map((record) => record.event)).size;
 
     const morningPresent = data.filter(
-      (r) => r.morningStatus === "present"
+      (r) => r.morningStatus === "present" || r.morningStatus === "late"
     ).length;
     const afternoonPresent = data.filter(
-      (r) => r.afternoonStatus === "present"
+      (r) => r.afternoonStatus === "present" || r.afternoonStatus === "late"
     ).length;
     const morningAbsent = data.filter(
       (r) => r.morningStatus === "absent"
@@ -179,8 +122,8 @@ const ReportGenerator: React.FC = () => {
         const dayPresent = records.reduce((count: number, r: Attendance) => {
           return (
             count +
-            (r.morningStatus === "present" ? 1 : 0) +
-            (r.afternoonStatus === "present" ? 1 : 0)
+            (r.morningStatus === "present" || r.morningStatus === "late" ? 1 : 0) +
+            (r.afternoonStatus === "present" || r.afternoonStatus === "late" ? 1 : 0)
           );
         }, 0);
         const dayTotal = records.length * 2;
@@ -204,7 +147,69 @@ const ReportGenerator: React.FC = () => {
       excusedCount: totalExcused,
       trendData,
     });
+  }, []);
+
+  const generateReport = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (filters.startDate) params.append("startDate", filters.startDate);
+      if (filters.endDate) params.append("endDate", filters.endDate);
+      if (filters.eventId) params.append("eventId", filters.eventId);
+      if (filters.studentId) params.append("studentId", filters.studentId);
+      if (filters.yearLevel) params.append("yearLevel", filters.yearLevel);
+      if (filters.major) params.append("major", filters.major);
+      if (filters.status !== "all") params.append("status", filters.status);
+      if (filters.session !== "all") params.append("session", filters.session);
+
+      const response = await api.get(`/attendance/report?${params.toString()}`);
+      setAttendanceData(response.data.attendanceRecords || []);
+      calculateStatistics(response.data.attendanceRecords || []);
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to generate report");
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, calculateStatistics]);
+
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
+      const [eventsRes, studentsRes] = await Promise.all([
+        api.get("/events"),
+        api.get("/students"),
+      ]);
+
+      // Handle both old and new response formats
+      const eventsData = eventsRes.data.events || eventsRes.data;
+      setEvents(Array.isArray(eventsData) ? eventsData : []);
+      // Handle paginated students response
+      const studentsData = studentsRes.data.students || studentsRes.data;
+      setStudents(Array.isArray(studentsData) ? studentsData : []);
+    } catch (error: any) {
+      setError("Failed to fetch initial data");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    if (events.length > 0 && students.length > 0) {
+      generateReport();
+    }
+  }, [filters, events, students, generateReport]);
+
+  /* 
+  Removed the calculateStatistics function from here to avoid circular dependency
+  It's now defined before generateReport using useCallback
+  */
 
   const handleFilterChange = (key: keyof ReportFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -464,6 +469,7 @@ const ReportGenerator: React.FC = () => {
             >
               <option value="all">All Statuses</option>
               <option value="present">Present</option>
+              <option value="late">Late</option>
               <option value="absent">Absent</option>
               <option value="excused">Excused</option>
             </select>
@@ -552,6 +558,15 @@ const ReportGenerator: React.FC = () => {
               </div>
               <div className="text-2xl font-bold text-yellow-900">
                 {stats.excusedCount}
+              </div>
+            </div>
+            {/* Added Late Stats */}
+            <div className="bg-orange-50 p-4 rounded-lg">
+               <div className="text-sm font-medium text-orange-600">
+                Includes Late
+              </div>
+               <div className="text-sm text-orange-800">
+                (Counted in Present)
               </div>
             </div>
           </div>
@@ -718,28 +733,32 @@ const ReportGenerator: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${record.morningStatus === "present"
-                              ? "bg-green-100 text-green-800"
-                              : record.morningStatus === "absent"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
-                        >
-                          {record.morningStatus}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${record.afternoonStatus === "present"
-                              ? "bg-green-100 text-green-800"
-                              : record.afternoonStatus === "absent"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
-                        >
-                          {record.afternoonStatus}
-                        </span>
+                          <span
+                            className={`px-2 py-1 text-xs font-medium rounded-full ${record.morningStatus === "present"
+                                ? "bg-green-100 text-green-800"
+                                : record.morningStatus === "late"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : record.morningStatus === "absent"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                              }`}
+                          >
+                            {record.morningStatus}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 text-xs font-medium rounded-full ${record.afternoonStatus === "present"
+                                ? "bg-green-100 text-green-800"
+                                : record.afternoonStatus === "late"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : record.afternoonStatus === "absent"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                              }`}
+                          >
+                            {record.afternoonStatus}
+                          </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(record.createdAt).toLocaleDateString()}

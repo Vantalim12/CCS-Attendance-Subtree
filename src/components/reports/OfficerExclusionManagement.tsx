@@ -56,6 +56,7 @@ const OfficerExclusionManagement: React.FC = () => {
       const response = await api.get("/officer-exclusions");
       setExclusions(response.data);
     } catch (error: any) {
+      console.error(error);
       setError("Failed to fetch officer exclusions");
     } finally {
       setLoading(false);
@@ -65,8 +66,11 @@ const OfficerExclusionManagement: React.FC = () => {
   const fetchStudents = async () => {
     try {
       const response = await api.get("/students");
-      setStudents(response.data);
+      // Handle both possible structures (paginated vs array)
+      const data = response.data.students || response.data;
+      setStudents(Array.isArray(data) ? data : []);
     } catch (error: any) {
+      console.error(error);
       setError("Failed to fetch students");
     }
   };

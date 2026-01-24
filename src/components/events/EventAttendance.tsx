@@ -16,6 +16,8 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
     totalStudents: 0,
     presentMorning: 0,
     presentAfternoon: 0,
+    lateMorning: 0,
+    lateAfternoon: 0,
     absentMorning: 0,
     absentAfternoon: 0,
     excusedMorning: 0,
@@ -58,6 +60,8 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
     const totalStudents = attendanceRecords.length;
     let presentMorning = 0,
       presentAfternoon = 0;
+    let lateMorning = 0,
+      lateAfternoon = 0;
     let absentMorning = 0,
       absentAfternoon = 0;
     let excusedMorning = 0,
@@ -66,12 +70,18 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
     attendanceRecords.forEach((attendance) => {
       // Count morning session stats
       if (attendance.morningStatus === "present") presentMorning++;
-      else if (attendance.morningStatus === "absent") absentMorning++;
+      else if (attendance.morningStatus === "late") {
+        presentMorning++;
+        lateMorning++;
+      } else if (attendance.morningStatus === "absent") absentMorning++;
       else if (attendance.morningStatus === "excused") excusedMorning++;
 
       // Count afternoon session stats
       if (attendance.afternoonStatus === "present") presentAfternoon++;
-      else if (attendance.afternoonStatus === "absent") absentAfternoon++;
+      else if (attendance.afternoonStatus === "late") {
+        presentAfternoon++;
+        lateAfternoon++;
+      } else if (attendance.afternoonStatus === "absent") absentAfternoon++;
       else if (attendance.afternoonStatus === "excused") excusedAfternoon++;
     });
 
@@ -79,6 +89,8 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
       totalStudents,
       presentMorning,
       presentAfternoon,
+      lateMorning,
+      lateAfternoon,
       absentMorning,
       absentAfternoon,
       excusedMorning,
@@ -236,6 +248,8 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
     switch (status) {
       case "present":
         return `${baseClasses} bg-green-100 text-green-800`;
+      case "late":
+        return `${baseClasses} bg-orange-100 text-orange-800`;
       case "absent":
         return `${baseClasses} bg-red-100 text-red-800`;
       case "excused":
@@ -325,6 +339,11 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
               </p>
               <p className="text-2xl font-semibold text-gray-900">
                 {stats.presentMorning}
+                {stats.lateMorning > 0 && (
+                  <span className="text-sm font-normal text-orange-600 ml-2">
+                    ({stats.lateMorning} late)
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -347,6 +366,11 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
               </p>
               <p className="text-2xl font-semibold text-gray-900">
                 {stats.presentAfternoon}
+                {stats.lateAfternoon > 0 && (
+                  <span className="text-sm font-normal text-orange-600 ml-2">
+                    ({stats.lateAfternoon} late)
+                  </span>
+                )}
               </p>
             </div>
           </div>
@@ -415,6 +439,7 @@ const EventAttendance: React.FC<EventAttendanceProps> = ({ event }) => {
             >
               <option value="all">All Statuses</option>
               <option value="present">Present</option>
+              <option value="late">Late</option>
               <option value="absent">Absent</option>
               <option value="excused">Excused</option>
             </select>

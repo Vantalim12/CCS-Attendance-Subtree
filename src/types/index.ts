@@ -85,8 +85,8 @@ export interface Attendance {
     studentId: string;
   };
   event: string;
-  morningStatus: "present" | "absent" | "excused";
-  afternoonStatus: "present" | "absent" | "excused";
+  morningStatus: "present" | "absent" | "excused" | "late";
+  afternoonStatus: "present" | "absent" | "excused" | "late";
   morningCheckIn?: string;
   morningCheckOut?: string;
   afternoonCheckIn?: string;

@@ -370,7 +370,7 @@ const EventForm: React.FC<EventFormProps> = ({ event, onSave, onCancel }) => {
                   }`}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Time after event start when late attendance is still accepted
+                  Time after event end when late attendance is still accepted
                 </p>
                 {errors.gracePeriodMinutes && (
                   <p className="text-red-500 text-sm mt-1">
@@ -410,7 +410,7 @@ const EventForm: React.FC<EventFormProps> = ({ event, onSave, onCancel }) => {
                 -{" "}
                 {new Date(
                   new Date(
-                    `${formData.eventDate}T${formData.startTime}`
+                    `${formData.eventDate}T${formData.endTime}`
                   ).getTime() +
                     formData.gracePeriodMinutes * 60 * 1000
                 ).toLocaleTimeString("en-US", {
