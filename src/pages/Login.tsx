@@ -27,9 +27,9 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-      {/* Left Panel: Brand / Static Info */}
-      <div className="bg-gray-100 p-12 flex flex-col justify-between relative overflow-hidden border-r border-gray-200">
+    <div className="h-screen w-full grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
+      {/* Left Panel: Brand / Static Info (Hidden on Mobile) */}
+      <div className="hidden lg:flex bg-gray-100 p-8 lg:p-12 flex-col justify-between relative overflow-hidden border-r border-gray-200 h-full">
         {/* Decorative Grid */}
         <div className="absolute inset-0 opacity-20 pointer-events-none"
           style={{
@@ -38,30 +38,33 @@ const Login: React.FC = () => {
           }}>
         </div>
 
-        <div className="relative z-10">
-          <div className="flex items-center space-x-3 mb-8">
+        {/* Top: Branding */}
+        <div className="relative z-10 flex-none">
+          <div className="flex items-center space-x-3 mb-6">
             <div className="w-8 h-8 bg-black"></div>
             <span className="font-mono font-bold tracking-tight">CCS_SYSTEM_V.2.0</span>
           </div>
 
-          <h1 className="text-6xl font-display font-bold text-gray-900 leading-tight mb-6">
+          <h1 className="text-5xl lg:text-6xl font-display font-bold text-gray-900 leading-tight mb-4">
             DIGITAL<br />ATTENDANCE<br />ARCHIVE
           </h1>
-          <p className="text-xl text-gray-600 font-serif max-w-md border-l-2 border-black pl-6 py-2">
-            Secure tabulation and attendance monitoring for the College of Computer Studies.
+          <p className="text-lg text-gray-600 font-serif max-w-md border-l-2 border-black pl-6 py-2">
+            Secure tabulation and attendance monitoring.
           </p>
-
-          {/* 3D Floating Logo */}
-          <div className="mt-12 perspective-container">
-            <img
-              src="/wolf-logo.png"
-              alt="CCS Wolf Logo"
-              className="w-48 h-auto float-3d"
-            />
-          </div>
         </div>
 
-        <div className="relative z-10 font-mono text-xs text-gray-500 space-y-2">
+        {/* Middle: Giant Logo (Takes available space) */}
+        <div className="relative z-10 flex-1 flex items-center justify-center min-h-0 perspective-container py-4">
+          <img
+            src="/wolf-logo.png"
+            alt="CCS Wolf Logo"
+            className="h-full w-auto max-w-full object-contain float-3d drop-shadow-2xl"
+            style={{ maxHeight: '50vh' }}
+          />
+        </div>
+
+        {/* Bottom: Status */}
+        <div className="relative z-10 font-mono text-xs text-gray-500 space-y-1 flex-none">
           <p>SYS.STATUS: ONLINE</p>
           <p>LOC: MSU-IIT</p>
           <p>DATE: {new Date().toLocaleDateString()}</p>
@@ -69,9 +72,24 @@ const Login: React.FC = () => {
       </div>
 
       {/* Right Panel: Login Terminal */}
-      <div className="bg-white p-12 flex flex-col justify-center">
-        <div className="max-w-md w-full mx-auto">
-          <div className="mb-12">
+      <div className="bg-white p-6 lg:p-12 flex flex-col justify-center h-full overflow-y-auto">
+        <div className="max-w-md w-full mx-auto my-auto pt-6 pb-6">
+
+          {/* Mobile Logo (Visible only on small screens) */}
+          <div className="lg:hidden flex flex-col items-center mb-8">
+            <div className="w-24 h-24 perspective-container mb-4">
+              <img
+                src="/wolf-logo.png"
+                alt="CCS Wolf Logo"
+                className="w-full h-full object-contain float-3d"
+              />
+            </div>
+            <h1 className="text-2xl font-display font-bold text-center leading-tight">
+              CCS DIGITAL<br />ARCHIVE
+            </h1>
+          </div>
+
+          <div className="mb-8 lg:mb-12">
             <div className="inline-block bg-black text-white px-2 py-1 text-xs font-mono mb-4">
               AUTHENTICATION_REQUIRED
             </div>
@@ -79,7 +97,7 @@ const Login: React.FC = () => {
             <p className="text-gray-500 font-mono text-sm">Please identify yourself to proceed.</p>
           </div>
 
-          <form className="space-y-8" onSubmit={handleSubmit}>
+          <form className="space-y-6 lg:space-y-8" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 border border-red-200 p-4 flex items-start space-x-3">
                 <span className="text-red-600 font-mono font-bold">ERR:</span>

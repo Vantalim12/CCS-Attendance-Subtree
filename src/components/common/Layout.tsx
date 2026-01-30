@@ -191,10 +191,17 @@ const Layout: React.FC = () => {
          - White background, sharp border
          - No rounded corners
       */}
+      {/* 
+         DESIGN CHANGE: Command Rail Sidebar 
+         - White background, sharp border
+         - No rounded corners
+      */}
       <div
         ref={sidebarRef}
-        className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 transition-all duration-200 ease-linear ${isSidebarExpanded || isPinned ? "sidebar-expanded" : "sidebar-collapsed"
-          }`}
+        className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 transition-all duration-300 ease-in-out
+          ${isSidebarExpanded || isPinned ? "w-[260px]" : "w-[64px]"}
+          ${!isSidebarExpanded && !isPinned ? "-translate-x-full lg:translate-x-0" : "translate-x-0"}
+        `}
         onMouseEnter={handleSidebarHover}
         onMouseLeave={handleSidebarLeave}
       >
@@ -202,8 +209,17 @@ const Layout: React.FC = () => {
         <div className="flex items-center h-16 px-4 border-b border-gray-100">
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-sm text-gray-800 hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-sm text-gray-800 hover:bg-gray-100 transition-colors lg:hidden"
             aria-label="Toggle sidebar"
+          >
+            <IconComponent name="menu" className="w-5 h-5" />
+          </button>
+
+          {/* Desktop Toggle (only if collapsed) */}
+          <button
+            onClick={toggleSidebar}
+            className="hidden lg:block p-2 rounded-sm text-gray-800 hover:bg-gray-100 transition-colors"
+            aria-label="Toggle sidebar desktop"
           >
             <IconComponent name="menu" className="w-5 h-5" />
           </button>
@@ -261,11 +277,14 @@ const Layout: React.FC = () => {
 
       {/* Main Content Area */}
       <div
-        className={`transition-all duration-200 ease-linear ${isSidebarExpanded || isPinned ? "ml-[260px]" : "ml-[64px]"
-          }`}
+        className={`transition-all duration-300 ease-in-out 
+          ml-0 
+          ${isSidebarExpanded || isPinned ? "lg:ml-[260px]" : "lg:ml-[64px]"}
+        `}
       >
         {/* Top bar (Status Bar) */}
-        <header className="sticky top-0 z-40 h-16 px-8 flex items-center justify-between bg-white/90 backdrop-blur-sm border-b border-gray-200">
+        {/* Top bar (Status Bar) */}
+        <header className="sticky top-0 z-40 h-20 px-4 lg:px-8 flex items-center justify-between bg-white/90 backdrop-blur-sm border-b border-gray-200">
 
           {/* Breadcrumb / Title */}
           <div className="flex items-center space-x-4">
@@ -277,8 +296,8 @@ const Layout: React.FC = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-6">
-            <div className="hidden md:flex items-center border border-gray-200 rounded-sm px-3 py-1.5 bg-gray-50">
+          <div className="flex items-center space-x-8">
+            <div className="hidden md:flex items-center border border-gray-200 rounded-sm px-4 py-2 bg-gray-50 hover:bg-white hover:border-gray-300 transition-colors cursor-text">
               <IconComponent name="search" className="w-4 h-4 text-gray-400 mr-2" />
               <input
                 type="text"
@@ -291,13 +310,13 @@ const Layout: React.FC = () => {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+                className="flex items-center space-x-3 px-3 py-2 rounded-sm hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
               >
                 <div className="text-right hidden sm:block">
                   <div className="text-xs font-bold font-mono text-gray-900">{user?.email}</div>
                   <div className="text-[10px] font-mono text-gray-500 uppercase">{user?.role}</div>
                 </div>
-                <div className="w-8 h-8 bg-black text-white flex items-center justify-center font-mono font-bold rounded-sm">
+                <div className="w-9 h-9 bg-black text-white flex items-center justify-center font-mono font-bold rounded-sm shadow-sm">
                   {user?.email?.charAt(0).toUpperCase()}
                 </div>
               </button>
@@ -333,7 +352,7 @@ const Layout: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="p-8">
+        <main className="p-4 lg:p-8">
           <Outlet />
         </main>
       </div>

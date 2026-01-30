@@ -292,8 +292,8 @@ const QRScanner: React.FC<QRScannerProps> = ({
 
           {autoRestart && isScanning && (
             <div className="text-center">
-              <p className="text-xs text-gray-500">
-                📷 Camera is running continuously - point at QR codes to scan
+              <p className="text-xs text-gray-500 font-mono">
+                [CAMERA_ACTIVE] Point at QR codes to scan
               </p>
             </div>
           )}

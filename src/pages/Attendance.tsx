@@ -182,20 +182,20 @@ const Attendance: React.FC = () => {
   };
 
   const tabs = [
-    { id: "scan" as const, label: "QR Scanner", icon: "📱", show: true },
+    { id: "scan" as const, label: "QR Scanner", icon: "", show: true },
     {
       id: "records" as const,
       label: "Attendance Records",
-      icon: "📊",
+      icon: "",
       show: true,
     },
     {
       id: "manual" as const,
       label: "Manual Marking",
-      icon: "✏️",
+      icon: "",
       show: isAdmin,
     },
-    { id: "excuses" as const, label: "Excuse Letters", icon: "📝", show: true },
+    { id: "excuses" as const, label: "Excuse Letters", icon: "", show: true },
   ].filter((tab) => tab.show);
 
   return (

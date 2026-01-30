@@ -20,6 +20,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "dev": "react-scripts start",
     "start:local": "set HOST=0.0.0.0&& react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
