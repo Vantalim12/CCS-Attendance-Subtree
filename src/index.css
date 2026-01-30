@@ -250,4 +250,31 @@ pre {
   .animate-cursor {
     animation: blink 1s step-end infinite;
   }
+
+  .perspective-container {
+    perspective: 1000px;
+  }
+
+  /* 3D Floating Effect */
+  @keyframes float-3d {
+    0% {
+      transform: translateY(0) rotateX(0) rotateY(0);
+      filter: drop-shadow(0 20px 15px rgba(0, 0, 0, 0.2));
+    }
+
+    50% {
+      transform: translateY(-20px) rotateX(5deg) rotateY(10deg);
+      filter: drop-shadow(0 40px 25px rgba(0, 0, 0, 0.3));
+    }
+
+    100% {
+      transform: translateY(0) rotateX(0) rotateY(0);
+      filter: drop-shadow(0 20px 15px rgba(0, 0, 0, 0.2));
+    }
+  }
+
+  .float-3d {
+    animation: float-3d 6s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
 }

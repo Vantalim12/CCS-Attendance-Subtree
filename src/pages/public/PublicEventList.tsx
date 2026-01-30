@@ -21,8 +21,14 @@ const PublicEventList: React.FC = () => {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                // Use REACT_APP_API_URL if available, otherwise default relative path or hardcoded
-                const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+                // Use REACT_APP_API_URL if available
+                // If not, check if we are on localhost. If so, use localhost:5000.
+                // Otherwise, use relative /api path (assuming proxy/same-origin) or specific production URL if known.
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = process.env.REACT_APP_API_URL || (isLocalhost ? 'http://localhost:5000/api' : 'https://ccs-attendance-system-production.up.railway.app/api');
+
+                console.log('Fetching events from:', apiUrl); // Debug log
+
                 const response = await axios.get(`${apiUrl}/public/events`, {
                     params: { org }
                 });

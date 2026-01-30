@@ -50,6 +50,15 @@ const Login: React.FC = () => {
           <p className="text-xl text-gray-600 font-serif max-w-md border-l-2 border-black pl-6 py-2">
             Secure tabulation and attendance monitoring for the College of Computer Studies.
           </p>
+
+          {/* 3D Floating Logo */}
+          <div className="mt-12 perspective-container">
+            <img
+              src="/wolf-logo.png"
+              alt="CCS Wolf Logo"
+              className="w-48 h-auto float-3d"
+            />
+          </div>
         </div>
 
         <div className="relative z-10 font-mono text-xs text-gray-500 space-y-2">
