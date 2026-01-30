@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import LoadingSpinner from "../components/common/LoadingSpinner";
-import CCSLogo from "../CCS_FINAL_LOGO.png";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
