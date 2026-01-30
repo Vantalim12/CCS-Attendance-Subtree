@@ -126,6 +126,27 @@ const EventList: React.FC<EventListProps> = ({
     }
   };
 
+  const handleExportAbsents = async (e: React.MouseEvent, eventId: string, eventTitle: string) => {
+    e.stopPropagation();
+    try {
+      const response = await api.get(`/export/events/${eventId}/absents`, {
+        responseType: 'blob',
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Absents_${eventTitle.replace(/[^a-zA-Z0-9]/g, '_')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to export absent students");
+    }
+  };
+
   const getEventStatus = (event: Event) => {
     const eventDate = new Date(event.eventDate);
     const today = new Date();
@@ -262,8 +283,8 @@ const EventList: React.FC<EventListProps> = ({
                 key={event._id}
                 onClick={() => handleEventClick(event)}
                 className={`bg-white rounded-lg shadow border-2 transition-all cursor-pointer hover:shadow-md ${selectedEvent?._id === event._id
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300"
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 hover:border-gray-300"
                   }`}
               >
                 <div className="p-6">
@@ -336,10 +357,17 @@ const EventList: React.FC<EventListProps> = ({
                     {isAdmin && (
                       <div className="flex gap-2 ml-4">
                         <button
+                          onClick={(e) => handleExportAbsents(e, event._id, event.title)}
+                          className="btn-secondary text-sm font-mono"
+                          title="Export absent students as CSV"
+                        >
+                          EXPORT_ABSENTS
+                        </button>
+                        <button
                           onClick={(e) => handleEditClick(e, event)}
                           className="btn-secondary text-sm"
                         >
-                          ✏️ Edit
+                          EDIT
                         </button>
                         <button
                           onClick={(e) => {
@@ -348,7 +376,7 @@ const EventList: React.FC<EventListProps> = ({
                           }}
                           className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
                         >
-                          🗑️
+                          DELETE
                         </button>
                       </div>
                     )}
