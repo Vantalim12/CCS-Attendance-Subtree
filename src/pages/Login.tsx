@@ -22,108 +22,76 @@ const Login: React.FC = () => {
       await login({ email, password });
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.");
+      setError(err.message || "Access denied. Check credentials.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-mesh">
-      {/* Header */}
-      <header className="relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6 md:justify-start md:space-x-10">
-            {/* Logo */}
-            <div className="flex justify-start lg:w-0 lg:flex-1">
-              <div className="flex items-center">
-                <img
-                  src={CCSLogo}
-                  alt="CCS Logo"
-                  className="w-10 h-10 rounded-lg floating-glow"
-                />
-                <span className="ml-3 text-xl font-display font-bold text-ink">
-                  CCS TABCOM Attendance System
-                </span>
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
-              {/* Sign up removed */}
-            </div>
-          </div>
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      {/* Left Panel: Brand / Static Info */}
+      <div className="bg-gray-100 p-12 flex flex-col justify-between relative overflow-hidden border-r border-gray-200">
+        {/* Decorative Grid */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none"
+          style={{
+            backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
+            backgroundSize: '40px 40px'
+          }}>
         </div>
-      </header>
 
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center">
-            {/* Product mark with glow */}
-            <div className="flex justify-center mb-8">
-              <img
-                src={CCSLogo}
-                alt="CCS Logo"
-                className="w-20 h-20 rounded-lg floating-glow"
-              />
-            </div>
-
-            {/* Hero headline */}
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-ink mb-6 tracking-tight">
-              <span className="text-gradient">CCS Attendance System</span>
-            </h1>
+        <div className="relative z-10">
+          <div className="flex items-center space-x-3 mb-8">
+            <div className="w-8 h-8 bg-black"></div>
+            <span className="font-mono font-bold tracking-tight">CCS_SYSTEM_V.2.0</span>
           </div>
+
+          <h1 className="text-6xl font-display font-bold text-gray-900 leading-tight mb-6">
+            DIGITAL<br />ATTENDANCE<br />ARCHIVE
+          </h1>
+          <p className="text-xl text-gray-600 font-serif max-w-md border-l-2 border-black pl-6 py-2">
+            Secure tabulation and attendance monitoring for the College of Computer Studies.
+          </p>
+        </div>
+
+        <div className="relative z-10 font-mono text-xs text-gray-500 space-y-2">
+          <p>SYS.STATUS: ONLINE</p>
+          <p>LOC: MSU-IIT</p>
+          <p>DATE: {new Date().toLocaleDateString()}</p>
         </div>
       </div>
 
-      {/* Login Form Section */}
-      <div id="login-form" className="relative py-16">
-        <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="glass-card-lg p-8 animate-slide-in">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-display font-bold text-ink mb-2">
-                Welcome Back
-              </h2>
-              <p className="text-ink-muted">
-                Sign in to your account to continue
-              </p>
+      {/* Right Panel: Login Terminal */}
+      <div className="bg-white p-12 flex flex-col justify-center">
+        <div className="max-w-md w-full mx-auto">
+          <div className="mb-12">
+            <div className="inline-block bg-black text-white px-2 py-1 text-xs font-mono mb-4">
+              AUTHENTICATION_REQUIRED
             </div>
+            <h2 className="text-3xl font-display font-semibold mb-2">Access Terminal</h2>
+            <p className="text-gray-500 font-mono text-sm">Please identify yourself to proceed.</p>
+          </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              {error && (
-                <div className="glass-card p-4 bg-red-50 border-red-200 animate-fade-in">
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className="w-5 h-5 text-red-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
-                      />
-                    </svg>
-                    <span className="text-red-700 text-sm">{error}</span>
-                  </div>
-                </div>
-              )}
+          <form className="space-y-8" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 p-4 flex items-start space-x-3">
+                <span className="text-red-600 font-mono font-bold">ERR:</span>
+                <span className="text-red-700 text-sm font-mono">{error}</span>
+              </div>
+            )}
 
+            <div className="space-y-6">
               <div>
-                <label htmlFor="email" className="label">
-                  Email address
+                <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider mb-2 font-mono text-gray-500">
+                  User_ID (Email)
                 </label>
                 <input
                   id="email"
                   name="email"
                   type="email"
-                  autoComplete="email"
                   required
-                  className="input-field"
-                  placeholder="Enter your email"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-sm font-mono text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  placeholder="user@msumain.edu.ph"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
@@ -131,102 +99,60 @@ const Login: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="password" className="label">
-                  Password
+                <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider mb-2 font-mono text-gray-500">
+                  Passkey
                 </label>
                 <input
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="current-password"
                   required
-                  className="input-field"
-                  placeholder="Enter your password"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-sm font-mono text-sm focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
+            </div>
 
-              <div>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <LoadingSpinner size="sm" text="" />
-                      <span>Signing in...</span>
-                    </div>
-                  ) : (
-                    "Sign in"
-                  )}
-                </button>
-              </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-black text-white px-6 py-4 font-mono text-sm uppercase tracking-wider border border-black hover:bg-white hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center group"
+            >
+              {isLoading ? (
+                <span className="animate-pulse">VERIFYING...</span>
+              ) : (
+                <>
+                  <span>Initialize Session</span>
+                  <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </>
+              )}
+            </button>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-ink/10"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white/50 text-ink-muted backdrop-blur-sm rounded">
-                    or view attendance
-                  </span>
-                </div>
-              </div>
-
+            <div className="border-t border-gray-100 pt-8 mt-8">
+              <p className="text-center text-xs font-mono text-gray-400 mb-6">- OR ACCESS DIRECTORY -</p>
               <div className="grid grid-cols-2 gap-4">
                 <Link
                   to="/public/events?org=CCS"
-                  className="p-4 rounded-xl border border-ink/10 bg-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all duration-300 group text-center"
+                  className="border border-gray-200 p-4 text-center hover:border-black hover:bg-gray-50 transition-all group"
                 >
-                  <div className="text-cyan-600 font-bold mb-1 group-hover:text-cyan-500">CCS</div>
-                  <div className="text-xs text-ink-muted">Directory</div>
+                  <span className="block font-bold font-display text-gray-900 group-hover:text-black">CCS</span>
+                  <span className="text-xs text-gray-500 font-mono">DIR_ACCESS</span>
                 </Link>
                 <Link
                   to="/public/events?org=CED"
-                  className="p-4 rounded-xl border border-ink/10 bg-white/5 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group text-center"
+                  className="border border-gray-200 p-4 text-center hover:border-black hover:bg-gray-50 transition-all group"
                 >
-                  <div className="text-purple-600 font-bold mb-1 group-hover:text-purple-500">CED</div>
-                  <div className="text-xs text-ink-muted">Directory</div>
+                  <span className="block font-bold font-display text-gray-900 group-hover:text-black">CED</span>
+                  <span className="text-xs text-gray-500 font-mono">DIR_ACCESS</span>
                 </Link>
               </div>
-
-              <div className="text-center mt-6">
-                {/* Sign up link removed */}
-              </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="py-12 border-t border-ink/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center">
-              <img
-                src={CCSLogo}
-                alt="CCS Logo"
-                className="w-10 h-10 rounded-lg floating-glow"
-              />
-              <span className="ml-2 font-display font-bold text-ink">
-                CCS TABCOM Attendance System
-              </span>
-            </div>
-            <p className="text-sm text-ink-muted">
-              Modern attendance management for students in MSU-IIT.
-            </p>
-            <div className="mt-8 pt-8 border-t border-ink/10">
-              <p className="text-sm text-ink-muted">
-                © 2025 CCS Tabulation Committee Attendance System. All rights
-                reserved.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
